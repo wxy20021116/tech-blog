@@ -1,9 +1,5 @@
-# About
-This is the demo site for [Fuwari](https://github.com/saicaca/fuwari).
+# 关于
 
-::github{repo="saicaca/fuwari"}
+这里会持续记录日常开发里沉淀下来的工程经验，包括后端状态建模、前后端契约、PDA 现场操作体验、多端一致性、数据更新策略等主题。
 
-> ### Sources of images used in this site
-> - [Unsplash](https://unsplash.com/)
-> - [星と少女](https://www.pixiv.net/artworks/108916539) by [Stella](https://www.pixiv.net/users/93273965)
-> - [Rabbit - v1.4 Showcase](https://civitai.com/posts/586908) by [Rabbit_YourMajesty](https://civitai.com/user/Rabbit_YourMajesty)
+博客的目标不是写工作日报，而是把真实项目中的问题抽象成可复用的技术案例。
