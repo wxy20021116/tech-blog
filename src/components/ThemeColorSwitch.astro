@@ -1,0 +1,171 @@
+---
+import { Icon } from "astro-icon/components";
+import I18nKey from "../i18n/i18nKey";
+import { i18n } from "../i18n/translation";
+import { siteConfig } from "../config";
+
+const defaultHue = siteConfig.themeColor.hue;
+const isFixed = siteConfig.themeColor.fixed;
+const swatches = [
+	{ hue: 0, label: "红色" },
+	{ hue: 28, label: "橙色" },
+	{ hue: 55, label: "黄色" },
+	{ hue: 120, label: "绿色" },
+	{ hue: 170, label: "青绿" },
+	{ hue: 200, label: "青色" },
+	{ hue: 245, label: "蓝色" },
+	{ hue: 285, label: "紫色" },
+	{ hue: 330, label: "粉色" },
+];
+---
+
+{
+	!isFixed && (
+		<div id="theme-color-switcher" class="relative z-50" role="menu" tabindex="-1">
+			<button
+				aria-label={i18n(I18nKey.themeColor)}
+				role="menuitem"
+				class="relative btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90"
+				id="theme-color-switch"
+				type="button"
+			>
+				<Icon
+					name="material-symbols:palette-outline"
+					class="text-[1.25rem] text-[var(--btn-content)]"
+				/>
+			</button>
+
+			<div
+				id="theme-color-panel"
+				class="hidden lg:block absolute transition float-panel-closed top-11 -right-2 pt-5"
+			>
+				<div class="card-base float-panel w-64 p-4">
+					<div class="mb-3 flex items-center justify-between gap-3">
+						<div class="text-sm font-bold text-[var(--primary)]">
+							{i18n(I18nKey.themeColor)}
+						</div>
+						<button
+							id="theme-color-reset"
+							class="btn-plain scale-animation rounded-lg px-2 py-1 text-xs font-medium active:scale-95"
+							type="button"
+							data-default-hue={defaultHue}
+						>
+							重置
+						</button>
+					</div>
+
+					<div class="grid grid-cols-9 gap-2" aria-label="Theme color swatches">
+						{swatches.map(({ hue, label }) => (
+							<button
+								type="button"
+								class="theme-color-swatch"
+								style={`--swatch-hue: ${hue}`}
+								data-hue={hue}
+								aria-label={label}
+							/>
+						))}
+					</div>
+
+					<label class="mt-4 block text-xs font-medium text-[var(--meta-divider)]" for="theme-color-range">
+						色相
+					</label>
+					<input
+						id="theme-color-range"
+						class="theme-color-range mt-2 w-full"
+						type="range"
+						min="0"
+						max="360"
+						step="1"
+						value={defaultHue}
+						aria-label="Theme color hue"
+					/>
+				</div>
+			</div>
+		</div>
+	)
+}
+
+<style>
+	.theme-color-swatch {
+		width: 1.25rem;
+		height: 1.25rem;
+		border-radius: 999px;
+		background: oklch(0.72 0.15 var(--swatch-hue));
+		box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.52), 0 0 0 1px rgb(0 0 0 / 0.08);
+		transition: transform 0.15s ease, box-shadow 0.15s ease;
+	}
+
+	.theme-color-swatch:hover,
+	.theme-color-swatch[aria-pressed="true"] {
+		transform: scale(1.13);
+		box-shadow:
+			inset 0 0 0 2px rgb(255 255 255 / 0.72),
+			0 0 0 2px var(--primary);
+	}
+
+	.theme-color-range {
+		accent-color: var(--primary);
+	}
+</style>
+
+<script>
+	function initThemeColorSwitcher() {
+		const root = document.getElementById("theme-color-switcher");
+		if (!root || root.dataset.ready === "true") {
+			return;
+		}
+		root.dataset.ready = "true";
+
+		const button = document.getElementById("theme-color-switch");
+		const panel = document.getElementById("theme-color-panel");
+		const range = document.getElementById("theme-color-range");
+		const reset = document.getElementById("theme-color-reset");
+		const swatches = Array.from(root.querySelectorAll("[data-hue]"));
+		const defaultHue = Number.parseInt(reset?.dataset.defaultHue || "200", 10);
+
+		const getHue = () => {
+			const storedHue = Number.parseInt(localStorage.getItem("hue") || "", 10);
+			return Number.isFinite(storedHue) ? storedHue : defaultHue;
+		};
+
+		const setHue = (hue) => {
+			const normalizedHue = Math.max(0, Math.min(360, Number.parseInt(String(hue), 10) || defaultHue));
+			localStorage.setItem("hue", String(normalizedHue));
+			document.documentElement.style.setProperty("--hue", String(normalizedHue));
+			if (range) {
+				range.value = String(normalizedHue);
+			}
+			swatches.forEach((swatch) => {
+				swatch.setAttribute(
+					"aria-pressed",
+					swatch.dataset.hue === String(normalizedHue) ? "true" : "false",
+				);
+			});
+		};
+
+		const openPanel = () => panel?.classList.remove("float-panel-closed");
+		const closePanel = () => panel?.classList.add("float-panel-closed");
+		const togglePanel = () => panel?.classList.toggle("float-panel-closed");
+
+		setHue(getHue());
+
+		button?.addEventListener("click", (event) => {
+			event.stopPropagation();
+			togglePanel();
+		});
+		button?.addEventListener("mouseenter", openPanel);
+		root.addEventListener("mouseleave", closePanel);
+		range?.addEventListener("input", () => setHue(range.value));
+		reset?.addEventListener("click", () => setHue(defaultHue));
+		swatches.forEach((swatch) => {
+			swatch.addEventListener("click", () => setHue(swatch.dataset.hue));
+		});
+		document.addEventListener("click", (event) => {
+			if (!root.contains(event.target)) {
+				closePanel();
+			}
+		});
+	}
+
+	initThemeColorSwitcher();
+</script>

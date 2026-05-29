@@ -29,6 +29,9 @@ export default defineConfig({
 	site: "https://wxy20021116.github.io/",
 	base: "/",
 	trailingSlash: "always",
+	devToolbar: {
+		enabled: false,
+	},
 	integrations: [
 		tailwind({
 			nesting: true,
