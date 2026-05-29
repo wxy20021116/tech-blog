@@ -7,7 +7,7 @@ declare global {
 				on: (event: string, callback: () => void) => void;
 			};
 		};
-		__wxyMermaidReady?: boolean;
+		__krisMermaidReady?: boolean;
 	}
 }
 
@@ -94,7 +94,7 @@ async function renderMermaidBlocks() {
 		wrapper.dataset[MERMAID_RENDERED] = "true";
 
 		try {
-			const id = `wxy-mermaid-${Date.now()}-${renderIndex++}`;
+			const id = `kris-mermaid-${Date.now()}-${renderIndex++}`;
 			const { svg } = await mermaidRenderer.render(id, source);
 			wrapper.innerHTML = svg;
 		} catch (error) {
@@ -127,8 +127,8 @@ function setupMermaidRenderer() {
 	}
 }
 
-if (!window.__wxyMermaidReady) {
-	window.__wxyMermaidReady = true;
+if (!window.__krisMermaidReady) {
+	window.__krisMermaidReady = true;
 
 	if (document.readyState === "loading") {
 		document.addEventListener("DOMContentLoaded", setupMermaidRenderer, { once: true });

@@ -8,7 +8,7 @@ import type {
 import { LinkPreset } from "./types/config";
 
 export const siteConfig: SiteConfig = {
-	title: "WXY Tech Notes",
+	title: "Kris_Wen Tech Notes",
 	subtitle: "把日常开发沉淀成可复用的工程经验",
 	lang: "zh_CN", // Language code, e.g. 'en', 'zh_CN', 'ja', etc.
 	themeColor: {
@@ -54,7 +54,7 @@ export const navBarConfig: NavBarConfig = {
 
 export const profileConfig: ProfileConfig = {
 	avatar: "assets/images/demo-avatar.png", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
-	name: "wxy",
+	name: "Kris_Wen",
 	bio: "记录后端、Web、PDA 多端协同开发中的工程实践。",
 	links: [
 		{
