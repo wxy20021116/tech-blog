@@ -1,0 +1,101 @@
+@media (pointer: fine) {
+	html,
+	body,
+	a,
+	button,
+	[role="button"],
+	input,
+	textarea,
+	select,
+	summary {
+		cursor: none;
+	}
+
+	.cursor-dot,
+	.cursor-ring,
+	.cursor-meteor {
+		position: fixed;
+		left: 0;
+		top: 0;
+		pointer-events: none;
+		z-index: 2147483647;
+		will-change: transform, opacity;
+	}
+
+	.cursor-dot {
+		width: 7px;
+		height: 7px;
+		border-radius: 999px;
+		background: oklch(0.78 0.16 var(--hue));
+		box-shadow:
+			0 0 14px oklch(0.78 0.16 var(--hue) / 0.65),
+			0 0 30px oklch(0.72 0.12 220 / 0.32);
+		transform: translate3d(-20px, -20px, 0);
+	}
+
+	.cursor-ring {
+		width: 34px;
+		height: 34px;
+		border: 1px solid oklch(0.78 0.14 var(--hue) / 0.56);
+		border-radius: 999px;
+		background: radial-gradient(circle, oklch(0.80 0.12 var(--hue) / 0.12), transparent 62%);
+		transform: translate3d(-40px, -40px, 0);
+		transition:
+			width 180ms ease,
+			height 180ms ease,
+			border-color 180ms ease,
+			background 180ms ease,
+			opacity 180ms ease;
+	}
+
+	.cursor-ring.is-hovering {
+		width: 46px;
+		height: 46px;
+		border-color: oklch(0.82 0.17 var(--hue) / 0.75);
+		background: radial-gradient(circle, oklch(0.82 0.14 var(--hue) / 0.18), transparent 66%);
+	}
+
+	.cursor-meteor {
+		width: 8px;
+		height: 8px;
+		border-radius: 999px;
+		background: oklch(0.82 0.17 var(--hue));
+		box-shadow:
+			0 0 12px oklch(0.82 0.17 var(--hue) / 0.72),
+			-16px 0 20px oklch(0.78 0.12 230 / 0.30);
+		opacity: 0;
+		transform: translate3d(-20px, -20px, 0);
+		animation: meteor-fade 720ms ease-out forwards;
+	}
+}
+
+@keyframes meteor-fade {
+	0% {
+		opacity: 0.95;
+		filter: blur(0);
+	}
+	100% {
+		opacity: 0;
+		filter: blur(1px);
+	}
+}
+
+@media (prefers-reduced-motion: reduce), (pointer: coarse) {
+	html,
+	body,
+	a,
+	button,
+	[role="button"],
+	input,
+	textarea,
+	select,
+	summary {
+		cursor: auto;
+	}
+
+	.cursor-dot,
+	.cursor-ring,
+	.cursor-meteor {
+		display: none;
+	}
+}
