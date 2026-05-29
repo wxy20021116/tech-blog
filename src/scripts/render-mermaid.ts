@@ -81,46 +81,6 @@ function findMermaidBlocks(): HTMLPreElement[] {
 	return Array.from(blocks);
 }
 
-function enableDragScroll(container: HTMLElement) {
-	let isDragging = false;
-	let startX = 0;
-	let startScrollLeft = 0;
-
-	container.addEventListener("pointerdown", (event) => {
-		if (container.scrollWidth <= container.clientWidth) return;
-		if (event.button !== 0) return;
-
-		isDragging = true;
-		startX = event.clientX;
-		startScrollLeft = container.scrollLeft;
-		container.classList.add("is-dragging");
-		container.setPointerCapture(event.pointerId);
-		event.preventDefault();
-	});
-
-	container.addEventListener("pointermove", (event) => {
-		if (!isDragging) return;
-		container.scrollLeft = startScrollLeft - (event.clientX - startX);
-		event.preventDefault();
-	});
-
-	const stopDragging = (event: PointerEvent) => {
-		if (!isDragging) return;
-		isDragging = false;
-		container.classList.remove("is-dragging");
-		if (container.hasPointerCapture(event.pointerId)) {
-			container.releasePointerCapture(event.pointerId);
-		}
-	};
-
-	container.addEventListener("pointerup", stopDragging);
-	container.addEventListener("pointercancel", stopDragging);
-	container.addEventListener("lostpointercapture", () => {
-		isDragging = false;
-		container.classList.remove("is-dragging");
-	});
-}
-
 async function renderMermaidBlocks() {
 	const blocks = findMermaidBlocks();
 	if (blocks.length === 0) return;
@@ -144,7 +104,6 @@ async function renderMermaidBlocks() {
 			const id = `kris-mermaid-${Date.now()}-${renderIndex++}`;
 			const { svg } = await mermaidRenderer.render(id, source);
 			wrapper.innerHTML = svg;
-			enableDragScroll(wrapper);
 		} catch (error) {
 			wrapper.classList.add("mermaid-rendered-error");
 			wrapper.textContent = "Mermaid diagram render failed. Please check the diagram syntax.";

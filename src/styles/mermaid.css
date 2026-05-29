@@ -10,17 +10,7 @@
 	);
 	overflow-x: auto;
 	overflow-y: hidden;
-	scrollbar-width: none;
-	touch-action: pan-y;
-	user-select: none;
-}
-
-.mermaid-rendered::-webkit-scrollbar {
-	display: none;
-}
-
-.mermaid-rendered.is-dragging {
-	scroll-behavior: auto;
+	scrollbar-width: thin;
 }
 
 .dark .mermaid-rendered {
