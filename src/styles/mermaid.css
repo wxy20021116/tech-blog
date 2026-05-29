@@ -1,14 +1,16 @@
 .mermaid-rendered {
-	margin: 1.25rem 0;
-	padding: 1rem;
-	border: 1px solid oklch(0.86 0.028 var(--hue) / 0.85);
-	border-radius: 0.9rem;
+	margin: 0.75rem 0 1.1rem;
+	padding: 0.75rem 0.5rem;
+	border: 1px solid oklch(0.9 0.02 var(--hue) / 0.75);
+	border-radius: 0.45rem;
 	background: linear-gradient(
 		180deg,
-		oklch(0.99 0.006 var(--hue)),
-		oklch(0.965 0.012 var(--hue))
+		oklch(0.995 0.003 var(--hue)),
+		oklch(0.98 0.008 var(--hue))
 	);
 	overflow-x: auto;
+	overflow-y: hidden;
+	scrollbar-width: thin;
 }
 
 .dark .mermaid-rendered {
@@ -22,11 +24,28 @@
 
 .mermaid-rendered svg {
 	display: block;
-	width: max-content;
-	max-width: 100%;
+	width: auto;
+	max-width: none;
+	max-height: 15rem;
 	height: auto;
-	min-width: min(42rem, 100%);
 	margin: 0 auto;
+}
+
+.mermaid-rendered svg .node rect,
+.mermaid-rendered svg .node polygon,
+.mermaid-rendered svg .node circle,
+.mermaid-rendered svg .node ellipse {
+	stroke-width: 1px;
+}
+
+@media (max-width: 640px) {
+	.mermaid-rendered {
+		padding: 0.6rem 0.35rem;
+	}
+
+	.mermaid-rendered svg {
+		max-height: 12rem;
+	}
 }
 
 .mermaid-rendered-error {

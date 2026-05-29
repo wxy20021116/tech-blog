@@ -47,7 +47,7 @@ draft: false
 这类多阶段任务流可以拆成三层校验：
 
 ```mermaid
-flowchart TD
+flowchart LR
     A["Mobile UI Filter"] --> B["User Operation"]
     B --> C["Backend Validation"]
     C --> D["State Transition"]

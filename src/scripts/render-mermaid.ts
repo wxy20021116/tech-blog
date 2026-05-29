@@ -38,6 +38,13 @@ async function getMermaid() {
 			noteBkgColor: "#fff7db",
 			noteTextColor: "#1f2937",
 		},
+		flowchart: {
+			curve: "basis",
+			htmlLabels: false,
+			nodeSpacing: 32,
+			rankSpacing: 42,
+			useMaxWidth: false,
+		},
 	});
 
 	return mermaidApi;
