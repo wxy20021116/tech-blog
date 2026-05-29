@@ -33,6 +33,13 @@
         background: linear-gradient(90deg, oklch(0.28 0.018 var(--hue)), oklch(0.18 0.018 var(--hue))) !important;
     }
 
+    .frame:not(.has-title):not(.is-terminal) .header {
+        display: none !important;
+        min-height: 0;
+        padding: 0;
+        background: none !important;
+    }
+
     .frame .header + .code,
     .frame pre {
         margin-top: 0 !important;
