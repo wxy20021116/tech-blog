@@ -1,4 +1,77 @@
 .expressive-code {
+    font-family: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.875rem;
+    line-height: 1.5rem;
+
+    pre {
+        display: flex !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow-x: auto;
+        border: 0 !important;
+        background: var(--codeblock-bg) !important;
+    }
+
+    pre > code {
+        display: block !important;
+        flex: 1 0 100%;
+        padding: 1rem 0 !important;
+        overflow: visible !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        color: #e1e4e8;
+        font: inherit;
+        line-height: inherit;
+    }
+
+    .ec-line {
+        display: grid !important;
+        grid-template-areas: "gutter code";
+        grid-template-columns: auto 1fr;
+        position: relative;
+        min-height: 1.5rem;
+        line-height: 1.5rem;
+    }
+
+    .ec-line .gutter {
+        grid-area: gutter;
+        color: #6a737d;
+        user-select: none;
+    }
+
+    .ec-line .gutter > * {
+        pointer-events: none;
+    }
+
+    .ec-line .gutter .ln {
+        display: inline-flex !important;
+        justify-content: flex-end;
+        min-width: 2ch;
+        padding-inline: 1.35rem 1rem;
+        box-sizing: content-box;
+    }
+
+    .ec-line .code {
+        grid-area: code;
+        position: relative;
+        box-sizing: content-box;
+        min-width: min(20ch, var(--ecMaxLine, 20ch));
+        padding-inline-start: calc(var(--ecIndent, 0ch) + 1.35rem);
+        padding-inline-end: 1.35rem;
+        border-inline-start: 1px solid rgb(106 115 125 / 0.25);
+        text-indent: calc(var(--ecIndent, 0ch) * -1);
+        white-space: pre;
+    }
+
+    pre.wrap .ec-line .code {
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+    }
+
+    pre.wrap .ec-line .code span.indent {
+        white-space: pre;
+    }
+
     .frame {
         @apply !shadow-none;
         position: relative;
