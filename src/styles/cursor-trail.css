@@ -11,6 +11,11 @@
 		cursor: none;
 	}
 
+	.mermaid-rendered,
+	.mermaid-rendered * {
+		cursor: none !important;
+	}
+
 	.cursor-wand,
 	.cursor-ring,
 	.cursor-star {
