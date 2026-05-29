@@ -11,9 +11,9 @@
 		cursor: none;
 	}
 
-	.cursor-dot,
+	.cursor-wand,
 	.cursor-ring,
-	.cursor-meteor {
+	.cursor-star {
 		position: fixed;
 		left: 0;
 		top: 0;
@@ -22,15 +22,45 @@
 		will-change: transform, opacity;
 	}
 
-	.cursor-dot {
-		width: 7px;
-		height: 7px;
+	.cursor-wand {
+		width: 34px;
+		height: 34px;
+		transform: translate3d(-40px, -40px, 0) rotate(-28deg);
+		transform-origin: 70% 20%;
+		filter: drop-shadow(0 0 10px oklch(0.82 0.15 var(--hue) / 0.55));
+	}
+
+	.cursor-wand::before {
+		content: "";
+		position: absolute;
+		left: 15px;
+		top: 5px;
+		width: 4px;
+		height: 27px;
 		border-radius: 999px;
-		background: oklch(0.78 0.16 var(--hue));
+		background: linear-gradient(
+			to bottom,
+			#fff7b8 0%,
+			oklch(0.82 0.13 var(--hue)) 22%,
+			oklch(0.35 0.04 var(--hue)) 23%,
+			oklch(0.19 0.02 var(--hue)) 100%
+		);
 		box-shadow:
-			0 0 14px oklch(0.78 0.16 var(--hue) / 0.65),
-			0 0 30px oklch(0.72 0.12 220 / 0.32);
-		transform: translate3d(-20px, -20px, 0);
+			inset 0 0 0 1px oklch(1 0 0 / 0.22),
+			0 0 10px oklch(0.82 0.16 var(--hue) / 0.36);
+	}
+
+	.cursor-wand::after {
+		content: "✦";
+		position: absolute;
+		left: 8px;
+		top: -4px;
+		color: #fff4a3;
+		font-size: 15px;
+		line-height: 1;
+		text-shadow:
+			0 0 7px #fff3a1,
+			0 0 16px oklch(0.82 0.15 var(--hue));
 	}
 
 	.cursor-ring {
@@ -55,28 +85,35 @@
 		background: radial-gradient(circle, oklch(0.82 0.14 var(--hue) / 0.18), transparent 66%);
 	}
 
-	.cursor-meteor {
-		width: 8px;
-		height: 8px;
-		border-radius: 999px;
-		background: oklch(0.82 0.17 var(--hue));
-		box-shadow:
-			0 0 12px oklch(0.82 0.17 var(--hue) / 0.72),
-			-16px 0 20px oklch(0.78 0.12 230 / 0.30);
+	.cursor-star {
+		width: 16px;
+		height: 16px;
+		color: #fff1a8;
+		font-size: 15px;
+		line-height: 16px;
+		text-align: center;
 		opacity: 0;
 		transform: translate3d(-20px, -20px, 0);
-		animation: meteor-fade 720ms ease-out forwards;
+		text-shadow:
+			0 0 8px #fff4ad,
+			0 0 18px oklch(0.82 0.16 var(--hue) / 0.72);
+		animation: star-fade 820ms ease-out forwards;
 	}
 }
 
-@keyframes meteor-fade {
+@keyframes star-fade {
 	0% {
 		opacity: 0.95;
 		filter: blur(0);
+		transform: translate3d(var(--star-x), var(--star-y), 0) scale(0.65) rotate(0deg);
+	}
+	45% {
+		opacity: 0.82;
 	}
 	100% {
 		opacity: 0;
 		filter: blur(1px);
+		transform: translate3d(calc(var(--star-x) + var(--star-dx)), calc(var(--star-y) + var(--star-dy)), 0) scale(0.12) rotate(140deg);
 	}
 }
 
@@ -93,9 +130,9 @@
 		cursor: auto;
 	}
 
-	.cursor-dot,
+	.cursor-wand,
 	.cursor-ring,
-	.cursor-meteor {
+	.cursor-star {
 		display: none;
 	}
 }
