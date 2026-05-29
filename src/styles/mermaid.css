@@ -1,0 +1,37 @@
+.mermaid-rendered {
+	margin: 1.25rem 0;
+	padding: 1rem;
+	border: 1px solid oklch(0.86 0.028 var(--hue) / 0.85);
+	border-radius: 0.9rem;
+	background: linear-gradient(
+		180deg,
+		oklch(0.99 0.006 var(--hue)),
+		oklch(0.965 0.012 var(--hue))
+	);
+	overflow-x: auto;
+}
+
+.dark .mermaid-rendered {
+	border-color: oklch(0.36 0.025 var(--hue));
+	background: linear-gradient(
+		180deg,
+		oklch(0.22 0.018 var(--hue)),
+		oklch(0.18 0.018 var(--hue))
+	);
+}
+
+.mermaid-rendered svg {
+	display: block;
+	width: max-content;
+	max-width: 100%;
+	height: auto;
+	min-width: min(42rem, 100%);
+	margin: 0 auto;
+}
+
+.mermaid-rendered-error {
+	color: oklch(0.56 0.18 25);
+	font-family: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, Monaco,
+		Consolas, "Liberation Mono", "Courier New", monospace;
+	font-size: 0.875rem;
+}
