@@ -157,6 +157,90 @@ const bannerOffset =
 
 		<!-- increase the page height during page transition to prevent the scrolling animation from jumping -->
 		<div id="page-height-extend" class="hidden h-[300vh]"></div>
+		<script is:inline>
+			(() => {
+				if (window.__wxyCursorTrailReady) return;
+				window.__wxyCursorTrailReady = true;
+
+				const finePointer = window.matchMedia("(pointer: fine)").matches;
+				const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+				if (!finePointer || reducedMotion) return;
+
+				const mount = () => {
+					if (!document.body || document.querySelector(".cursor-wand")) return;
+
+					const wand = document.createElement("div");
+					const ring = document.createElement("div");
+					wand.className = "cursor-wand";
+					ring.className = "cursor-ring";
+					document.body.append(wand, ring);
+
+					let x = window.innerWidth / 2;
+					let y = window.innerHeight / 2;
+					let ringX = x;
+					let ringY = y;
+					let lastStar = 0;
+					const interactiveSelector = "a, button, [role='button'], input, textarea, select, summary, .btn-plain, .btn-regular, .btn-card";
+
+					const spawnStar = (clientX, clientY) => {
+						const star = document.createElement("span");
+						star.className = "cursor-star";
+						star.textContent = Math.random() > 0.5 ? "✦" : "✧";
+						const offsetX = (Math.random() - 0.5) * 18;
+						const offsetY = (Math.random() - 0.5) * 18;
+						star.style.setProperty("--star-x", `${clientX + offsetX - 8}px`);
+						star.style.setProperty("--star-y", `${clientY + offsetY - 8}px`);
+						star.style.setProperty("--star-dx", `${(Math.random() - 0.5) * 34}px`);
+						star.style.setProperty("--star-dy", `${18 + Math.random() * 22}px`);
+						document.body.appendChild(star);
+						window.setTimeout(() => star.remove(), 860);
+					};
+
+					window.addEventListener("mousemove", (event) => {
+						x = event.clientX;
+						y = event.clientY;
+						wand.style.transform = `translate3d(${x - 16}px, ${y - 12}px, 0) rotate(-28deg)`;
+
+						const target = event.target;
+						if (target instanceof Element && target.closest(interactiveSelector)) {
+							ring.classList.add("is-hovering");
+						} else {
+							ring.classList.remove("is-hovering");
+						}
+
+						const now = performance.now();
+						if (now - lastStar > 34) {
+							lastStar = now;
+							spawnStar(x, y);
+						}
+					}, { passive: true });
+
+					document.addEventListener("mouseleave", () => {
+						wand.style.opacity = "0";
+						ring.style.opacity = "0";
+					});
+					document.addEventListener("mouseenter", () => {
+						wand.style.opacity = "1";
+						ring.style.opacity = "1";
+					});
+
+					const renderRing = () => {
+						ringX += (x - ringX) * 0.18;
+						ringY += (y - ringY) * 0.18;
+						const size = ring.classList.contains("is-hovering") ? 46 : 34;
+						ring.style.transform = `translate3d(${ringX - size / 2}px, ${ringY - size / 2}px, 0)`;
+						requestAnimationFrame(renderRing);
+					};
+					renderRing();
+				};
+
+				if (document.readyState === "loading") {
+					document.addEventListener("DOMContentLoaded", mount, { once: true });
+				} else {
+					mount();
+				}
+			})();
+		</script>
 	</body>
 </html>
 
@@ -212,7 +296,6 @@ import {
 	MAIN_PANEL_OVERLAPS_BANNER_HEIGHT
 } from "../constants/constants";
 import { siteConfig } from '../config';
-import "../scripts/cursor-trail";
 
 /* Preload fonts */
 // (async function() {
