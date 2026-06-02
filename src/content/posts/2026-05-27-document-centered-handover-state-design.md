@@ -7,7 +7,7 @@ tags: [后端, PDA, 状态一致性, 接口设计]
 category: 技术实践
 draft: false
 ---
-## Background: an abstract case
+## 背景：一个抽象的交接场景
 
 在现场作业系统里，移动端经常要处理一种看似简单、实际很容易出错的流程：某一批资源已经从主流程中退回，需要由操作人员完成交接、扫描、确认和状态回写。
 
@@ -30,7 +30,7 @@ draft: false
 
 这类问题本质上不是“页面多展示一个字段”，而是交接流程的主维度发生了变化：从“子单据视角”升级为“聚合单据视角”。
 
-## Problem breakdown
+## 问题拆解
 
 我把这次改造抽象成四个问题。
 
@@ -85,7 +85,7 @@ preparationOrderId
 
 状态回写如果散落在多个接口里，会让系统越来越难维护。
 
-## Solution design
+## 方案设计
 
 比较稳妥的做法，是把“聚合单据”提升为交接流程的一等参数。
 
@@ -102,7 +102,7 @@ flowchart LR
 
 这条链路里，移动端负责清晰展示和减少误操作；后端负责权威校验和状态一致性。
 
-## Backend: use an aggregate root for handover
+## 后端：以聚合单据作为交接入口
 
 后端接口可以保留原来的子单据查询能力，但新增聚合维度时，不要让移动端自己拼接多个子单据。移动端只应该传入一个稳定的上层 ID。
 
@@ -133,7 +133,7 @@ public HandoverOverview getHandoverOverview(Long preparationOrderId) {
 
 不要把这些逻辑都堆在 Controller 里。Controller 只应该做参数接收和结果返回，真正的聚合规则放在 Service 或策略类里。
 
-## PDA/mobile: show progress before scan
+## 移动端：先展示进度，再进入扫描
 
 移动端最容易犯的错，是把扫描页做成流程入口。实际上在聚合场景里，用户应该先看到整体进度，再进入扫描。
 
@@ -162,7 +162,7 @@ public HandoverOverview getHandoverOverview(Long preparationOrderId) {
 - 用户在操作前就知道为什么不能继续；
 - 后端不需要通过异常承担全部交互解释责任。
 
-## Scan validation: never trust the current page only
+## 扫描校验：不能只信任当前页面状态
 
 移动端页面上展示了某个准备单，并不代表扫描请求就一定安全。网络延迟、重复进入页面、缓存数据、多人并发操作，都可能让移动端状态过期。
 
@@ -191,7 +191,7 @@ public ScanResult scan(ScanCommand command) {
 
 尤其是聚合单据场景，`preparationOrderId` 不是一个展示字段，而是扫描校验的边界条件。所有资源匹配都应该落在这个边界内。
 
-## State update: clear old bindings explicitly
+## 状态回写：显式清理旧绑定
 
 交接、退回、重新分配这类流程，经常伴随“旧位置”“旧绑定关系”“旧任务状态”的清理。一个容易踩坑的点是：如果使用普通实体更新，并把字段设置为 `null`，某些 ORM 默认不会把 `null` 更新到数据库。
 
@@ -211,7 +211,7 @@ resourceMapper.update(
 
 这个细节看起来小，但它决定了“旧状态是否真的被清干净”。如果旧绑定没有清理，后续页面可能继续展示过期来源位置，甚至影响下一次分配。
 
-## Common pitfalls
+## 常见坑
 
 ### 把聚合逻辑放到前端
 
@@ -255,7 +255,7 @@ resourceMapper.update(
 
 ![system reliability](https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&fm=jpg&q=70&w=1200)
 
-## Reusable experience
+## 可复用经验
 
 这类从“单据维度”升级到“聚合维度”的改造，可以复用下面的检查清单。
 
@@ -287,7 +287,7 @@ resourceMapper.update(
 - 是否考虑旧绑定清理？
 - 是否考虑部分子单据完成、整体未完成的中间态？
 
-## Summary
+## 总结
 
 多单据聚合场景的难点，不在于多查几条数据，而在于主流程维度发生了变化。
 
