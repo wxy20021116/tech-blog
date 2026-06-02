@@ -2,7 +2,7 @@
 title: "多单据聚合场景下的交接流程与状态阻塞设计"
 published: 2026-05-27
 description: "从一次移动端交接流程改造中，抽象多业务单据聚合、进度统计、扫描校验和状态阻塞的设计方法。"
-image: "https://p6.itc.cn/q_70/images03/20210503/2747d4f3c2c3445b9bb97ef7a5255fcf.jpeg"
+image: "/images/covers/2026-05-27-handover-cover.jpg"
 tags: [后端, PDA, 状态一致性, 接口设计]
 category: 技术实践
 draft: false
