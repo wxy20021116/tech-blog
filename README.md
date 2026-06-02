@@ -31,6 +31,7 @@
 - 增加 Cloudflare Pages 部署说明
 - 接入本地 `git-tech-blog` skill 工作流
 - 支持把 `W:\ht\new\tech_docs` 中的文章同步到博客文章目录
+- 接入 Giscus 评论、不蒜子阅读量、Cloudflare Web Analytics 和相关文章推荐
 
 ## 本地运行
 

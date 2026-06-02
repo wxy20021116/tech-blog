@@ -1,4 +1,7 @@
 import type {
+	AnalyticsConfig,
+	BusuanziConfig,
+	CommentConfig,
 	ExpressiveCodeConfig,
 	LicenseConfig,
 	NavBarConfig,
@@ -46,7 +49,7 @@ export const navBarConfig: NavBarConfig = {
 		LinkPreset.About,
 		{
 			name: "GitHub",
-			url: "https://github.com/", // Internal links should not include the base path, as it is automatically added
+			url: "https://github.com/wxy20021116/tech-blog", // Internal links should not include the base path, as it is automatically added
 			external: true, // Show an external link icon and will open in a new tab
 		},
 	],
@@ -60,7 +63,7 @@ export const profileConfig: ProfileConfig = {
 		{
 			name: "GitHub",
 			icon: "fa6-brands:github",
-			url: "https://github.com/",
+			url: "https://github.com/wxy20021116",
 		},
 	],
 };
@@ -75,4 +78,50 @@ export const expressiveCodeConfig: ExpressiveCodeConfig = {
 	// Note: Some styles (such as background color) are being overridden, see the astro.config.mjs file.
 	// Please select a dark theme, as this blog theme currently only supports dark background color
 	theme: "github-dark",
+};
+
+// ---------------------------------------------------------------------------
+// Giscus comments (powered by GitHub Discussions).
+//
+// One-time setup, all on github.com:
+//   1. Make the repo below PUBLIC.
+//   2. Repo -> Settings -> General -> Features -> enable "Discussions".
+//   3. Install the giscus app: https://github.com/apps/giscus (grant it this repo).
+//   4. Open https://giscus.app, enter the repo, pick a category (e.g. "Announcements"),
+//      then copy the generated `data-category-id` into `categoryId` below.
+//
+// Until Discussions are enabled and categoryId is filled in, the comment box simply does not render
+// (the site still builds and works normally).
+// ---------------------------------------------------------------------------
+export const commentConfig: CommentConfig = {
+	enable: true,
+	giscus: {
+		repo: "wxy20021116/tech-blog",
+		repoId: import.meta.env.PUBLIC_GISCUS_REPO_ID ?? "R_kgDOSq6q7g",
+		category: "Announcements",
+		categoryId: import.meta.env.PUBLIC_GISCUS_CATEGORY_ID ?? "",
+		mapping: "pathname",
+		strict: false,
+		reactionsEnabled: true,
+		emitMetadata: false,
+		inputPosition: "bottom",
+		lang: "zh-CN",
+	},
+};
+
+// 不蒜子 page view / visitor counters. No account or key required.
+export const busuanziConfig: BusuanziConfig = {
+	enable: true,
+	src: "https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js",
+};
+
+// Cloudflare Web Analytics (privacy-friendly, cookieless).
+//   Option A (zero code): in the Cloudflare Pages project enable Web Analytics — done.
+//   Option B (this config): paste the beacon token from
+//     Cloudflare dashboard → Web Analytics → site → JS snippet.
+export const analyticsConfig: AnalyticsConfig = {
+	cloudflare: {
+		enable: true,
+		token: import.meta.env.PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN ?? "",
+	},
 };

@@ -2,13 +2,15 @@
 import path from "node:path";
 import License from "@components/misc/License.astro";
 import Markdown from "@components/misc/Markdown.astro";
+import Giscus from "@components/comment/Giscus.astro";
+import RelatedPosts from "@components/RelatedPosts.astro";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
-import { getSortedPosts } from "@utils/content-utils";
+import { getRelatedPosts, getSortedPosts } from "@utils/content-utils";
 import { getDir, getPostUrlBySlug } from "@utils/url-utils";
 import { Icon } from "astro-icon/components";
-import { licenseConfig } from "src/config";
+import { busuanziConfig, licenseConfig } from "src/config";
 import ImageWrapper from "../../components/misc/ImageWrapper.astro";
 import PostMetadata from "../../components/PostMeta.astro";
 import { profileConfig, siteConfig } from "../../config";
@@ -26,6 +28,8 @@ const { entry } = Astro.props;
 const { Content, headings } = await entry.render();
 
 const { remarkPluginFrontmatter } = await entry.render();
+
+const relatedPosts = await getRelatedPosts(entry.slug, 6);
 
 const jsonLd = {
 	"@context": "https://schema.org",
@@ -67,6 +71,18 @@ const jsonLd = {
                         {remarkPluginFrontmatter.minutes} {" " + i18n(remarkPluginFrontmatter.minutes === 1 ? I18nKey.minuteCount : I18nKey.minutesCount)}
                     </div>
                 </div>
+
+                <!-- page views (不蒜子) -->
+                {busuanziConfig.enable && (
+                    <div class="flex flex-row items-center" id="post-views">
+                        <div class="transition h-6 w-6 rounded-md bg-black/5 dark:bg-white/10 text-black/50 dark:text-white/50 flex items-center justify-center mr-2">
+                            <Icon name="material-symbols:visibility-outline-rounded" aria-hidden="true"></Icon>
+                        </div>
+                        <div class="text-sm" id="busuanzi_container_page_pv" aria-label="Page views">
+                            <span id="busuanzi_value_page_pv" class="opacity-70">··</span>
+                        </div>
+                    </div>
+                )}
             </div>
 
             <!-- title -->
@@ -132,5 +148,11 @@ const jsonLd = {
             </div>}
         </a>
     </div>
+
+    <!-- related posts -->
+    <RelatedPosts posts={relatedPosts} />
+
+    <!-- comments (Giscus) -->
+    <Giscus />
 
 </MainGridLayout>

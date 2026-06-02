@@ -1,0 +1,48 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { Icon } from "astro-icon/components";
+import I18nKey from "@i18n/i18nKey";
+import { i18n } from "@i18n/translation";
+import { getPostUrlBySlug } from "@utils/url-utils";
+import { formatDateToYYYYMMDD } from "@utils/date-utils";
+
+interface Props {
+	posts: CollectionEntry<"posts">[];
+}
+const { posts } = Astro.props;
+---
+{posts.length > 0 && (
+    <section class="card-base rounded-[var(--radius-large)] px-6 md:px-9 py-6 mb-4 onload-animation" aria-labelledby="related-posts-title">
+        <div class="flex items-center gap-2 mb-4">
+            <Icon name="material-symbols:article-shortcut-outline-rounded" class="text-[1.5rem] text-[var(--primary)]" aria-hidden="true" />
+            <h2 id="related-posts-title" class="text-xl font-bold text-black/90 dark:text-white/90">{i18n(I18nKey.relatedPosts)}</h2>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {posts.map((post) => (
+                <a
+                    href={getPostUrlBySlug(post.slug)}
+                    aria-label={post.data.title}
+                    class="group transition flex flex-col gap-1.5 rounded-xl p-4 h-full
+                        bg-black/[0.03] dark:bg-white/5 hover:bg-black/5 dark:hover:bg-white/10 active:scale-95"
+                >
+                    <div class="transition font-bold line-clamp-2 text-black/80 dark:text-white/80
+                        group-hover:text-[var(--primary)] dark:group-hover:text-[var(--primary)]">
+                        {post.data.title}
+                    </div>
+                    <div class="transition mt-auto pt-1 text-sm text-black/40 dark:text-white/40 flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span class="flex items-center gap-1 whitespace-nowrap">
+                            <Icon name="material-symbols:calendar-today-outline-rounded" class="text-base" aria-hidden="true" />
+                            {formatDateToYYYYMMDD(post.data.published)}
+                        </span>
+                        {post.data.category && (
+                            <>
+                                <span>·</span>
+                                <span class="line-clamp-1">{post.data.category}</span>
+                            </>
+                        )}
+                    </div>
+                </a>
+            ))}
+        </div>
+    </section>
+)}

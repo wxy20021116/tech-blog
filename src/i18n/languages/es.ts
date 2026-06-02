@@ -12,6 +12,7 @@ export const es: Translation = {
 	[Key.recentPosts]: "Publicaciones recientes",
 
 	[Key.comments]: "Comentarios",
+	[Key.relatedPosts]: "Publicaciones relacionadas",
 
 	[Key.untitled]: "Sin título",
 	[Key.uncategorized]: "Sin categoría",

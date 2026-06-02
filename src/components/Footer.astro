@@ -1,9 +1,10 @@
 ---
 
-import { profileConfig } from "../config";
+import { busuanziConfig, profileConfig, siteConfig } from "../config";
 import { url } from "../utils/url-utils";
 
 const currentYear = new Date().getFullYear();
+const isZh = siteConfig.lang.toLowerCase().startsWith("zh");
 ---
 
 <!--<div class="border-t border-[var(&#45;&#45;primary)] mx-16 border-dashed py-8 max-w-[var(&#45;&#45;page-width)] flex flex-col items-center justify-center px-6">-->
@@ -18,4 +19,14 @@ const currentYear = new Date().getFullYear();
         <a class="transition link text-[var(--primary)] font-medium" target="_blank" href="https://astro.build">Astro</a> &
         <a class="transition link text-[var(--primary)] font-medium" target="_blank" href="https://github.com/saicaca/fuwari">Fuwari</a>, customized for technical writing.
     </div>
+    {busuanziConfig.enable && (
+        <div class="transition text-50 text-xs text-center mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+            <span id="busuanzi_container_site_pv">
+                {isZh ? "总访问量" : "Total Views"} <span id="busuanzi_value_site_pv" class="font-medium">··</span>{isZh ? " 次" : ""}
+            </span>
+            <span id="busuanzi_container_site_uv">
+                {isZh ? "访客数" : "Visitors"} <span id="busuanzi_value_site_uv" class="font-medium">··</span>{isZh ? " 人" : ""}
+            </span>
+        </div>
+    )}
 </div>

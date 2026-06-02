@@ -12,6 +12,7 @@ export const zh_CN: Translation = {
 	[Key.recentPosts]: "最新文章",
 
 	[Key.comments]: "评论",
+	[Key.relatedPosts]: "相关文章",
 
 	[Key.untitled]: "无标题",
 	[Key.uncategorized]: "未分类",

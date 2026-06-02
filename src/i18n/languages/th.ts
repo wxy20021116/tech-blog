@@ -12,6 +12,7 @@ export const th: Translation = {
 	[Key.recentPosts]: "โพสต์ล่าสุด",
 
 	[Key.comments]: "ความคิดเห็น",
+	[Key.relatedPosts]: "บทความที่เกี่ยวข้อง",
 
 	[Key.untitled]: "ไม่ได้ตั้งชื่อ",
 	[Key.uncategorized]: "ไม่ได้จัดหมวดหมู่",

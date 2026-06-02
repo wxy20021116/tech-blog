@@ -31,6 +31,56 @@ export async function getSortedPosts() {
 
 	return sorted;
 }
+
+// Recommend posts related to the given one, ranked by shared tags (weighted)
+// and by sharing the same category. Falls back to the most recent posts when
+// there are not enough tag/category matches, so the section is never empty.
+export async function getRelatedPosts(
+	currentSlug: string,
+	count = 6,
+): Promise<CollectionEntry<"posts">[]> {
+	const all = await getRawSortedPosts(); // already date-desc, drafts excluded in prod
+	const current = all.find((p) => p.slug === currentSlug);
+	if (!current) return [];
+
+	const normalize = (s: string) => s.trim().toLowerCase();
+	const currentTags = new Set((current.data.tags ?? []).map(normalize));
+	const currentCategory = current.data.category
+		? normalize(current.data.category)
+		: "";
+
+	const candidates = all.filter((p) => p.slug !== currentSlug);
+
+	const scored = candidates
+		.map((post) => {
+			const sharedTags = (post.data.tags ?? []).filter((t) =>
+				currentTags.has(normalize(t)),
+			).length;
+			const sameCategory =
+				currentCategory &&
+				post.data.category &&
+				normalize(post.data.category) === currentCategory
+					? 1
+					: 0;
+			return { post, score: sharedTags * 2 + sameCategory };
+		})
+		.filter((x) => x.score > 0)
+		.sort((a, b) => {
+			if (b.score !== a.score) return b.score - a.score;
+			return (
+				new Date(b.post.data.published).getTime() -
+				new Date(a.post.data.published).getTime()
+			);
+		})
+		.map((x) => x.post);
+
+	if (scored.length >= count) return scored.slice(0, count);
+
+	// Top up with the most recent posts that are not already included.
+	const chosen = new Set(scored.map((p) => p.slug));
+	const fillers = candidates.filter((p) => !chosen.has(p.slug));
+	return [...scored, ...fillers].slice(0, count);
+}
 export type PostForList = {
 	slug: string;
 	data: CollectionEntry<"posts">["data"];

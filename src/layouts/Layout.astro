@@ -5,7 +5,7 @@ import "@fontsource/roboto/700.css";
 import "../styles/mermaid.css";
 
 import ConfigCarrier from "@components/ConfigCarrier.astro";
-import { profileConfig, siteConfig } from "@/config";
+import { analyticsConfig, busuanziConfig, profileConfig, siteConfig } from "@/config";
 import {
 	AUTO_MODE,
 	BANNER_HEIGHT,
@@ -148,6 +148,12 @@ const bannerOffset =
 
 		<link rel="alternate" type="application/rss+xml" title={profileConfig.name} href={`${Astro.site}rss.xml`}/>
 
+		<!-- Cloudflare Web Analytics (privacy-friendly, cookieless) -->
+		{analyticsConfig.cloudflare.enable && analyticsConfig.cloudflare.token && (
+			<script is:inline defer src="https://static.cloudflareinsights.com/beacon.min.js"
+				data-cf-beacon={`{"token": "${analyticsConfig.cloudflare.token}"}`}></script>
+		)}
+
 	</head>
 	<body class=" min-h-screen transition " class:list={[{"lg:is-home": isHomePage, "enable-banner": enableBanner}]}
 		  data-overlayscrollbars-initialize
@@ -157,6 +163,91 @@ const bannerOffset =
 
 		<!-- increase the page height during page transition to prevent the scrolling animation from jumping -->
 		<div id="page-height-extend" class="hidden h-[300vh]"></div>
+
+		<!-- 不蒜子 page views + Giscus comments loader.
+		     Lives outside the Swup container so it persists across page transitions
+		     and re-runs its work on every `page:view`. -->
+		<script is:inline define:vars={{ busuanziEnable: busuanziConfig.enable, busuanziSrc: busuanziConfig.src }}>
+			(function () {
+				// ---- 不蒜子 (busuanzi) : reload so page_pv tracks the current URL ----
+				function loadBusuanzi() {
+					var prev = document.getElementById("busuanzi-script");
+					if (prev) prev.remove();
+					var s = document.createElement("script");
+					s.id = "busuanzi-script";
+					s.async = true;
+					s.src = busuanziSrc;
+					document.head.appendChild(s);
+				}
+
+				// ---- Giscus comments ----
+				var GISCUS_ORIGIN = "https://giscus.app";
+				function giscusTheme() {
+					return document.documentElement.classList.contains("dark") ? "dark" : "light";
+				}
+				function loadGiscus() {
+					var container = document.getElementById("giscus-container");
+					if (!container) return;
+					var d = container.dataset;
+					if (!d.repo || !d.repoId || !d.category || !d.categoryId) return;
+					container.innerHTML = ""; // clear any previous iframe (e.g. after Swup navigation)
+					var s = document.createElement("script");
+					s.src = GISCUS_ORIGIN + "/client.js";
+					s.setAttribute("data-repo", d.repo);
+					s.setAttribute("data-repo-id", d.repoId);
+					s.setAttribute("data-category", d.category);
+					s.setAttribute("data-category-id", d.categoryId);
+					s.setAttribute("data-mapping", d.mapping || "pathname");
+					s.setAttribute("data-strict", d.strict || "0");
+					s.setAttribute("data-reactions-enabled", d.reactionsEnabled || "1");
+					s.setAttribute("data-emit-metadata", d.emitMetadata || "0");
+					s.setAttribute("data-input-position", d.inputPosition || "bottom");
+					s.setAttribute("data-theme", giscusTheme());
+					s.setAttribute("data-lang", d.lang || "en");
+					s.setAttribute("data-loading", "lazy");
+					s.crossOrigin = "anonymous";
+					s.async = true;
+					container.appendChild(s);
+				}
+				function syncGiscusTheme(theme) {
+					var iframe = document.querySelector("iframe.giscus-frame");
+					if (iframe && iframe.contentWindow) {
+						iframe.contentWindow.postMessage({ giscus: { setConfig: { theme: theme } } }, GISCUS_ORIGIN);
+					}
+				}
+
+				// keep Giscus theme in sync with the site's light/dark toggle
+				var observerReady = false;
+				function ensureThemeObserver() {
+					if (observerReady) return;
+					observerReady = true;
+					var last = giscusTheme();
+					new MutationObserver(function () {
+						var t = giscusTheme();
+						if (t !== last) { last = t; syncGiscusTheme(t); }
+					}).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+				}
+
+				function refresh() {
+					if (busuanziEnable) loadBusuanzi();
+					loadGiscus();
+					ensureThemeObserver();
+				}
+
+				refresh(); // initial load
+
+				function bindSwup() {
+					if (window.swup && window.swup.hooks) {
+						window.swup.hooks.on("page:view", refresh);
+					}
+				}
+				if (window.swup && window.swup.hooks) {
+					bindSwup();
+				} else {
+					document.addEventListener("swup:enable", bindSwup);
+				}
+			})();
+		</script>
 	</body>
 </html>
 

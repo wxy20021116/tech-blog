@@ -53,6 +53,33 @@ Root directory: /
 
 Cloudflare's official Astro Pages guide uses `npm run build` and `dist`; `pnpm build` is equivalent here because this project uses `pnpm-lock.yaml`.
 
+## Analytics And Comments
+
+Cloudflare Web Analytics is wired through an optional Pages environment variable:
+
+```text
+PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN=<your Cloudflare Web Analytics token>
+```
+
+If Web Analytics is enabled directly in the Cloudflare Pages dashboard, this variable can stay empty.
+
+Giscus comments need one GitHub-side setup before the comment box appears:
+
+1. Enable Discussions for `wxy20021116/tech-blog`.
+2. Install the giscus GitHub App for the repository.
+3. Open `https://giscus.app`, choose the repository and the `Announcements` category.
+4. Add the generated category id as a Cloudflare Pages environment variable:
+
+```text
+PUBLIC_GISCUS_CATEGORY_ID=<data-category-id from giscus.app>
+```
+
+The repository id is already configured in code. If the repository is recreated, override it with:
+
+```text
+PUBLIC_GISCUS_REPO_ID=<data-repo-id from giscus.app>
+```
+
 ## Add New Posts
 
 Add Markdown files under:

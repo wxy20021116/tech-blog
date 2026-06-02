@@ -77,6 +77,60 @@ export type LicenseConfig = {
 	url: string;
 };
 
+export type GiscusConfig = {
+	/** GitHub repository in the form "owner/repo". Must be public with Discussions enabled. */
+	repo: string;
+	/** Repository ID from giscus.app (looks like "R_..."). */
+	repoId: string;
+	/** Discussion category name, e.g. "Announcements". */
+	category: string;
+	/** Discussion category ID from giscus.app (looks like "DIC_..."). */
+	categoryId: string;
+	/** How posts map to discussions. "pathname" is recommended. */
+	mapping: "pathname" | "url" | "title" | "og:title";
+	/** Use strict title matching (1) or not (0). */
+	strict: boolean;
+	/** Enable reactions on the main post. */
+	reactionsEnabled: boolean;
+	/** Emit discussion metadata. */
+	emitMetadata: boolean;
+	/** Comment box position. */
+	inputPosition: "top" | "bottom";
+	/** giscus UI language code, e.g. "zh-CN", "en". */
+	lang: string;
+};
+
+export type CommentConfig = {
+	enable: boolean;
+	giscus: GiscusConfig;
+};
+
+export type BusuanziConfig = {
+	/** Show 不蒜子 page view / visitor counters. */
+	enable: boolean;
+	/**
+	 * Script source. Defaults to the official 不蒜子 endpoint.
+	 * If it is unreachable you can switch to an API-compatible mirror, e.g.
+	 *   https://busuanzi.9420.ltd/js
+	 *   https://cn.vercount.one/js   (vercount, same span IDs)
+	 * without any other code changes.
+	 */
+	src: string;
+};
+
+export type AnalyticsConfig = {
+	cloudflare: {
+		enable: boolean;
+		/**
+		 * Cloudflare Web Analytics beacon token. Get it from
+		 * Cloudflare dashboard → Web Analytics → your site → JS snippet.
+		 * Leave empty if you instead enable Web Analytics directly on the
+		 * Cloudflare Pages project (zero-code auto injection).
+		 */
+		token: string;
+	};
+};
+
 export type LIGHT_DARK_MODE =
 	| typeof LIGHT_MODE
 	| typeof DARK_MODE
