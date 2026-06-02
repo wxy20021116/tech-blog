@@ -13,6 +13,15 @@ import { LinkPreset } from "./types/config";
 export const siteConfig: SiteConfig = {
 	title: "Kris_Wen Tech Notes",
 	subtitle: "把日常开发沉淀成可复用的工程经验",
+	keywords: [
+		"后端开发",
+		"Web 开发",
+		"PDA",
+		"多端协同",
+		"状态一致性",
+		"系统设计",
+		"工程实践",
+	],
 	lang: "zh_CN", // Language code, e.g. 'en', 'zh_CN', 'ja', etc.
 	themeColor: {
 		hue: 200, // Default hue for the theme color, from 0 to 360. e.g. red: 0, teal: 200, cyan: 250, pink: 345

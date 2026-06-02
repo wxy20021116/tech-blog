@@ -69,6 +69,22 @@
         mask-image: linear-gradient(to bottom, transparent 0%, black 2rem, black calc(100% - 2rem), transparent 100%);
     }
 
+    #toc .toc-entry.current {
+        @apply bg-[var(--toc-btn-hover)];
+    }
+
+    #toc .toc-entry.current > div:first-child {
+        @apply bg-[var(--primary)] text-white shadow-sm;
+    }
+
+    #toc .toc-entry.current > div:first-child div {
+        @apply bg-white;
+    }
+
+    #toc .toc-entry.current > div:last-child {
+        @apply font-medium text-[var(--primary)];
+    }
+
     .hide-scrollbar {
         scrollbar-width: none;
         -ms-overflow-style: none;

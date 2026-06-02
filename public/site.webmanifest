@@ -1,0 +1,23 @@
+{
+  "name": "Kris_Wen Tech Notes",
+  "short_name": "Kris_Wen",
+  "description": "把日常开发沉淀成可复用的工程经验，记录后端、Web、PDA 多端协同开发中的工程实践。",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "minimal-ui",
+  "background_color": "#ffffff",
+  "theme_color": "#1786c8",
+  "icons": [
+    {
+      "src": "/favicon/blog-logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon/blog-logo-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

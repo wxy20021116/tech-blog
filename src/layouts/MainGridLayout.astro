@@ -6,6 +6,7 @@ import SideBar from "@components/widget/SideBar.astro";
 import type { MarkdownHeading } from "astro";
 import { Icon } from "astro-icon/components";
 import ImageWrapper from "../components/misc/ImageWrapper.astro";
+import ReadingProgress from "../components/ReadingProgress.astro";
 import TOC from "../components/widget/TOC.astro";
 import { siteConfig } from "../config";
 import {
@@ -22,6 +23,10 @@ interface Props {
 	lang?: string;
 	setOGTypeArticle?: boolean;
 	headings?: MarkdownHeading[];
+	ogImage?: string;
+	keywords?: string[];
+	publishedTime?: Date | string;
+	modifiedTime?: Date | string;
 }
 
 const {
@@ -31,6 +36,10 @@ const {
 	lang,
 	setOGTypeArticle,
 	headings = [],
+	ogImage,
+	keywords,
+	publishedTime,
+	modifiedTime,
 } = Astro.props;
 const hasBannerCredit =
 	siteConfig.banner.enable && siteConfig.banner.credit.enable;
@@ -41,7 +50,17 @@ const mainPanelTop = siteConfig.banner.enable
 	: "5.5rem";
 ---
 
-<Layout title={title} banner={banner} description={description} lang={lang} setOGTypeArticle={setOGTypeArticle}>
+<Layout
+    title={title}
+    banner={banner}
+    description={description}
+    lang={lang}
+    setOGTypeArticle={setOGTypeArticle}
+    ogImage={ogImage}
+    keywords={keywords}
+    publishedTime={publishedTime}
+    modifiedTime={modifiedTime}
+>
 
 <!-- Navbar -->
 <slot slot="head" name="head"></slot>
@@ -83,6 +102,7 @@ const mainPanelTop = siteConfig.banner.enable
             <SideBar class="mb-4 row-start-2 row-end-3 col-span-2 lg:row-start-1 lg:row-end-2 lg:col-span-1 lg:max-w-[17.5rem] onload-animation" headings={headings}></SideBar>
 
             <main id="swup-container" class="transition-swup-fade col-span-2 lg:col-span-1 overflow-hidden">
+                <ReadingProgress></ReadingProgress>
                 <div id="content-wrapper" class="onload-animation">
                     <!-- the overflow-hidden here prevent long text break the layout-->
                     <!-- make id different from windows.swup global property -->

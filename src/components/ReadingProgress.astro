@@ -1,0 +1,75 @@
+---
+import { url } from "../utils/url-utils";
+
+const isPostsRoute = Astro.url.pathname.startsWith(url("/posts/"));
+---
+
+{isPostsRoute && (
+	<reading-progress
+		class="fixed inset-x-0 top-0 z-[60] h-[3px] pointer-events-none"
+		aria-hidden="true"
+	>
+		<div
+			id="reading-progress-bar"
+			class="h-full origin-left scale-x-0 bg-[var(--primary)] shadow-[0_0_12px_var(--primary)] transition-transform duration-75 ease-out"
+		></div>
+	</reading-progress>
+)}
+
+<script>
+class ReadingProgress extends HTMLElement {
+	bar: HTMLElement | null = null;
+	article: HTMLElement | null = null;
+	ticking = false;
+
+	connectedCallback() {
+		this.bar = this.querySelector<HTMLElement>("#reading-progress-bar");
+		this.bind();
+		this.update();
+	}
+
+	disconnectedCallback() {
+		window.removeEventListener("scroll", this.requestUpdate);
+		window.removeEventListener("resize", this.requestUpdate);
+	}
+
+	bind() {
+		this.article = document.getElementById("post-container");
+		window.addEventListener("scroll", this.requestUpdate, { passive: true });
+		window.addEventListener("resize", this.requestUpdate);
+	}
+
+	requestUpdate = () => {
+		if (this.ticking) return;
+		this.ticking = true;
+		requestAnimationFrame(() => {
+			this.ticking = false;
+			this.update();
+		});
+	};
+
+	update() {
+		if (!this.bar) return;
+
+		if (!this.article) {
+			this.article = document.getElementById("post-container");
+		}
+
+		if (!this.article) {
+			this.bar.style.transform = "scaleX(0)";
+			return;
+		}
+
+		const rect = this.article.getBoundingClientRect();
+		const total = Math.max(rect.height - window.innerHeight, 1);
+		const read = Math.min(Math.max(-rect.top, 0), total);
+		const progress = rect.height <= window.innerHeight && rect.top < 0 ? 1 : read / total;
+
+		this.bar.style.transform = `scaleX(${progress})`;
+	}
+}
+
+if (!customElements.get("reading-progress")) {
+	customElements.define("reading-progress", ReadingProgress);
+}
+</script>

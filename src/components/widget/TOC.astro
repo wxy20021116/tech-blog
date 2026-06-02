@@ -34,7 +34,7 @@ const maxLevel = siteConfig.toc.depth;
 {isPostsRoute &&
 <table-of-contents class:list={[className, "group"]}>
     {headings.filter((heading) => heading.depth < minDepth + maxLevel).map((heading) =>
-            <a href={`#${heading.slug}`} class="px-2 flex gap-2 relative transition w-full min-h-9 rounded-xl
+            <a href={`#${heading.slug}`} class="toc-entry px-2 flex gap-2 relative transition w-full min-h-9 rounded-xl
         hover:bg-[var(--toc-btn-hover)] active:bg-[var(--toc-btn-active)] py-2
     ">
                 <div class:list={["transition w-5 h-5 shrink-0 rounded-lg text-xs flex items-center justify-center font-bold",
@@ -63,6 +63,7 @@ const maxLevel = siteConfig.toc.depth;
 class TableOfContents extends HTMLElement {
     tocEl: HTMLElement | null = null;
     visibleClass = "visible";
+    currentClass = "current";
     observer: IntersectionObserver;
     anchorNavTarget: HTMLElement | null = null;
     headingIdxMap = new Map<string, number>();
@@ -70,6 +71,8 @@ class TableOfContents extends HTMLElement {
     sections: HTMLElement[] = [];
     tocEntries: HTMLAnchorElement[] = [];
     active: boolean[] = [];
+    currentIdx = -1;
+    updateScheduled = false;
     activeIndicator: HTMLElement | null = null;
 
     constructor() {
@@ -154,9 +157,19 @@ class TableOfContents extends HTMLElement {
     update = () => {
         requestAnimationFrame(() => {
             this.toggleActiveHeading();
+            this.updateCurrentHeading();
             // requestAnimationFrame(() => {
             this.scrollToActiveHeading();
             // });
+        });
+    };
+
+    requestUpdate = () => {
+        if (this.updateScheduled) return;
+        this.updateScheduled = true;
+        requestAnimationFrame(() => {
+            this.updateScheduled = false;
+            this.update();
         });
     };
 
@@ -178,6 +191,45 @@ class TableOfContents extends HTMLElement {
 
     markActiveHeading = (idx: number)=> {
         this.active[idx] = true;
+    };
+
+    updateCurrentHeading = () => {
+        if (!this.headings.length) return;
+
+        const topOffset = 96;
+        let nextIdx = -1;
+
+        for (let i = 0; i < this.headings.length; i++) {
+            const heading = this.headings[i];
+            if (!heading) continue;
+
+            if (heading.getBoundingClientRect().top <= topOffset) {
+                nextIdx = i;
+            } else {
+                break;
+            }
+        }
+
+        if (nextIdx === -1) {
+            nextIdx = this.active.findIndex((isActive) => isActive);
+        }
+
+        if (nextIdx === -1) {
+            nextIdx = 0;
+        }
+
+        if (nextIdx === this.currentIdx) return;
+
+        if (this.currentIdx >= 0) {
+            const previous = this.tocEntries[this.currentIdx];
+            previous?.classList.remove(this.currentClass);
+            previous?.removeAttribute("aria-current");
+        }
+
+        this.currentIdx = nextIdx;
+        const current = this.tocEntries[this.currentIdx];
+        current?.classList.add(this.currentClass);
+        current?.setAttribute("aria-current", "location");
     };
 
     handleAnchorClick = (event: Event) => {
@@ -222,6 +274,8 @@ class TableOfContents extends HTMLElement {
         this.tocEl.addEventListener("click", this.handleAnchorClick, {
             capture: true,
         });
+        window.addEventListener("scroll", this.requestUpdate, { passive: true });
+        window.addEventListener("resize", this.requestUpdate);
 
         this.activeIndicator = document.getElementById("active-indicator");
 
@@ -259,6 +313,8 @@ class TableOfContents extends HTMLElement {
         );
         this.observer.disconnect();
         this.tocEl?.removeEventListener("click", this.handleAnchorClick);
+        window.removeEventListener("scroll", this.requestUpdate);
+        window.removeEventListener("resize", this.requestUpdate);
     };
 }
 
