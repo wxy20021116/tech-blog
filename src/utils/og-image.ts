@@ -56,8 +56,8 @@ function textBlock(
 export async function renderPostOgImage(
 	post: CollectionEntry<"posts">,
 ): Promise<Buffer> {
-	const titleLines = wrapText(post.data.title, 19, 3);
-	const descriptionLines = wrapText(post.data.description || siteConfig.subtitle, 34, 2);
+	const titleLines = wrapText(post.data.title, 13, 3);
+	const descriptionLines = wrapText(post.data.description || siteConfig.subtitle, 24, 2);
 	const tags = post.data.tags.slice(0, 4);
 	const category = post.data.category?.trim() || "技术实践";
 	const published = formatDateToYYYYMMDD(post.data.published);
@@ -80,7 +80,7 @@ export async function renderPostOgImage(
 		</filter>
 		<style>
 			.base { font-family: "Microsoft YaHei", "Noto Sans CJK SC", "PingFang SC", "Segoe UI", Arial, sans-serif; }
-			.title { font-size: 64px; font-weight: 800; fill: #111827; letter-spacing: 0; }
+			.title { font-size: 54px; font-weight: 800; fill: #111827; letter-spacing: 0; }
 			.desc { font-size: 28px; font-weight: 500; fill: #475569; letter-spacing: 0; }
 			.meta { font-size: 24px; font-weight: 600; fill: #475569; letter-spacing: 0; }
 			.brand { font-size: 30px; font-weight: 800; fill: #0f172a; letter-spacing: 0; }
@@ -98,8 +98,8 @@ export async function renderPostOgImage(
 	<g class="base">
 		<text x="96" y="154" class="brand">${escapeXml(siteConfig.title)}</text>
 		<text x="96" y="194" class="small">${escapeXml(profileConfig.name)} / ${escapeXml(category)} / ${escapeXml(published)}</text>
-		${textBlock(titleLines, 96, 292, 76, "title")}
-		${textBlock(descriptionLines, 96, 492, 38, "desc")}
+		${textBlock(titleLines, 96, 270, 66, "title")}
+		${textBlock(descriptionLines, 96, 466, 38, "desc")}
 		<g transform="translate(96 540)">
 			${tags
 				.map((tag, index) => {
