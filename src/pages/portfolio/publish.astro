@@ -6,18 +6,12 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 	<meta slot="head" name="robots" content="noindex,nofollow" />
 
 	<section class="moment-shell card-base">
-		<div id="auth-panel" class="auth-panel" hidden>
-			<div>
-				<p id="auth-title" class="auth-title">需要先完成 GitHub 授权</p>
-				<p id="auth-description" class="auth-description">
-					授权通过后才可以上传图片并发表作品动态。
-				</p>
-			</div>
+		<div id="auth-panel" class="auth-panel">
 			<a id="auth-button" class="auth-button" href="/api/github/login">GitHub 授权</a>
 			<p id="auth-status" class="status" aria-live="polite"></p>
 		</div>
 
-		<form id="publish-form" class="moment-form" hidden>
+		<form id="publish-form" class="moment-form">
 			<header class="moment-topbar">
 				<a href="/portfolio/" aria-label="取消">取消</a>
 				<button id="publish-button" type="submit">发表</button>
@@ -51,8 +45,6 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 	) as HTMLButtonElement | null;
 	const publishStatus = document.getElementById("publish-status");
 	const authPanel = document.getElementById("auth-panel");
-	const authTitle = document.getElementById("auth-title");
-	const authDescription = document.getElementById("auth-description");
 	const authButton = document.getElementById("auth-button");
 	const authStatus = document.getElementById("auth-status");
 
@@ -70,7 +62,7 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		event.preventDefault();
 
 		if (!authReady) {
-			showAuthPanel("需要先完成 GitHub 授权", "授权通过后才可以上传图片并发表作品动态。", "");
+			updateAuthState(false, "需要先完成 GitHub 授权。", "error");
 			return;
 		}
 
@@ -104,7 +96,7 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 
 			if (response.status === 401) {
 				authReady = false;
-				showAuthPanel("授权已失效", "请重新完成 GitHub 授权后再发表。", "");
+				updateAuthState(false, "授权已失效，请重新完成 GitHub 授权后再发表。", "error");
 				return;
 			}
 
@@ -126,7 +118,7 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 
 	async function initAuth() {
 		const authMessage = getAuthMessage();
-		showAuthPanel("正在检查 GitHub 授权", "稍等一下，正在确认当前登录状态。", authMessage);
+		updateAuthState(false, authMessage || "正在检查 GitHub 授权...", authMessage.includes("成功") ? "ok" : "");
 
 		try {
 			const response = await fetch("/api/github/me", {
@@ -137,32 +129,21 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 
 			if (!payload.authenticated) {
 				authReady = false;
-				showAuthPanel("需要先完成 GitHub 授权", "授权通过后才可以上传图片并发表作品动态。", authMessage);
+				updateAuthState(false, authMessage || "需要先完成 GitHub 授权。", authMessage ? "error" : "");
 				return;
 			}
 
 			if (!payload.allowed) {
 				authReady = false;
-				showAuthPanel(
-					"当前 GitHub 账号没有发布权限",
-					`已登录 ${payload.login || "GitHub"}，但这个账号不在允许发布名单内。`,
-					authMessage,
-				);
+				updateAuthState(false, `已登录 ${payload.login || "GitHub"}，但这个账号不在允许发布名单内。`, "error");
 				return;
 			}
 
 			authReady = true;
-			hideAuthPanel();
-			if (authMessage) {
-				setStatus(authMessage, "ok");
-			}
+			updateAuthState(true, authMessage || `授权成功，当前账号：${payload.login || "GitHub"}。`, "ok");
 		} catch (error) {
 			authReady = false;
-			showAuthPanel(
-				"授权状态检查失败",
-				errorMessage(error, "请稍后重试，或重新点击授权。"),
-				authMessage,
-			);
+			updateAuthState(false, errorMessage(error, "授权状态检查失败，请稍后重试，或重新点击授权。"), "error");
 		}
 	}
 
@@ -174,22 +155,21 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		return "";
 	}
 
-	function showAuthPanel(title: string, description: string, status: string) {
-		authReady = false;
-		if (form) form.hidden = true;
+	function updateAuthState(ready: boolean, status: string, type: string) {
+		authReady = ready;
 		if (authPanel) authPanel.hidden = false;
-		if (authTitle) authTitle.textContent = title;
-		if (authDescription) authDescription.textContent = description;
 		if (authStatus) {
 			authStatus.textContent = status;
-			authStatus.className = `status ${status.includes("成功") ? "ok" : status ? "error" : ""}`;
+			authStatus.className = `status ${type}`;
 		}
-		if (authButton) authButton.removeAttribute("hidden");
-	}
-
-	function hideAuthPanel() {
-		if (authPanel) authPanel.hidden = true;
-		if (form) form.hidden = false;
+		if (authButton) authButton.textContent = ready ? "重新授权" : "GitHub 授权";
+		if (form) form.classList.toggle("is-disabled", !ready);
+		if (descriptionInput) descriptionInput.disabled = !ready;
+		if (imageInput) imageInput.disabled = !ready;
+		if (publishButton) publishButton.disabled = !ready;
+		for (const input of document.querySelectorAll<HTMLInputElement>(".add-tile input")) {
+			input.disabled = !ready;
+		}
 	}
 
 	async function readJson(response: Response) {
@@ -229,6 +209,7 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		previewGrid.appendChild(addTile);
 
 		const liveInput = addTile.querySelector("input") as HTMLInputElement | null;
+		if (liveInput) liveInput.disabled = !authReady;
 		liveInput?.addEventListener("change", () => {
 			selectedFiles = Array.from(liveInput.files || []);
 			renderPreview();
@@ -252,7 +233,7 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 
 	function setBusy(value: boolean) {
 		if (!publishButton) return;
-		publishButton.disabled = value;
+		publishButton.disabled = value || !authReady;
 		publishButton.textContent = value ? "发表中" : "发表";
 	}
 
@@ -272,36 +253,16 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 
 	.moment-form {
 		min-height: 38rem;
-		padding: 1.5rem 1.75rem 2rem;
+		padding: 1.25rem 1.75rem 2rem;
 		background: #fff;
 	}
 
 	.auth-panel {
-		min-height: 24rem;
-		padding: 2rem;
-		display: grid;
-		align-content: center;
-		justify-items: start;
-		gap: 1rem;
+		padding: 1.25rem 1.75rem 0;
+		display: flex;
+		align-items: center;
+		gap: 0.85rem;
 		background: #fff;
-	}
-
-	.auth-panel[hidden],
-	.moment-form[hidden] {
-		display: none;
-	}
-
-	.auth-title {
-		margin: 0;
-		color: rgb(0 0 0 / 90%);
-		font-size: 1.35rem;
-		font-weight: 800;
-	}
-
-	.auth-description {
-		margin: 0.45rem 0 0;
-		color: rgb(0 0 0 / 58%);
-		line-height: 1.8;
 	}
 
 	.auth-button {
@@ -321,7 +282,7 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		margin-bottom: 2.2rem;
+		margin-bottom: 1.6rem;
 	}
 
 	.moment-topbar a {
@@ -343,6 +304,7 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 
 	.moment-topbar button:disabled {
 		opacity: 0.65;
+		cursor: not-allowed;
 	}
 
 	textarea {
@@ -360,6 +322,11 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 
 	textarea::placeholder {
 		color: rgb(0 0 0 / 24%);
+	}
+
+	textarea:disabled {
+		cursor: not-allowed;
+		color: rgb(0 0 0 / 45%);
 	}
 
 	.preview-grid {
@@ -389,6 +356,11 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		cursor: pointer;
 	}
 
+	.moment-form.is-disabled .add-tile {
+		cursor: not-allowed;
+		opacity: 0.58;
+	}
+
 	.add-tile input {
 		display: none;
 	}
@@ -404,6 +376,10 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		margin: 1.2rem 0 0;
 		line-height: 1.7;
 		color: rgb(0 0 0 / 48%);
+	}
+
+	.auth-panel .status {
+		margin: 0;
 	}
 
 	.status.ok {
