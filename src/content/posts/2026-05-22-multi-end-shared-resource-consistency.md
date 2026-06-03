@@ -1,6 +1,7 @@
 ---
 title: "多端协同系统中共享资源分配的状态一致性设计"
 published: 2026-05-22
+image: "/images/covers/009fsvBWgy1idmkk2btqcj30ur1a5thj.jpg"
 description: "在一些复杂的业务系统里，同一份资源并不总是只服务于一个任务。它可能先被任务 A 占用，又在满足条件时被任务 B 临时复用；任务 A 结束后，这份资源还可能继续流转给任务 C，或者回到待处理池。"
 tags: [技术实践]
 category: 技术实践
