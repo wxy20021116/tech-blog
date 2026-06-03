@@ -248,11 +248,10 @@ const websiteJsonLd = {
 					var container = document.getElementById("busuanzi_container_" + name);
 					if (container) container.style.display = "inline";
 				}
-				function loadBusuanzi() {
+				function loadBusuanzi(isRetry, retryCount) {
 					if (!hasBusuanziTarget()) return;
 					var path = window.location.pathname + window.location.search;
-					if (path === lastBusuanziPath) return;
-					lastBusuanziPath = path;
+					if (!isRetry && path === lastBusuanziPath) return;
 					busuanziRequestId += 1;
 					var requestId = busuanziRequestId;
 					var callbackName = "BusuanziCallback_" + Date.now() + "_" + Math.floor(Math.random() * 1000000);
@@ -261,16 +260,23 @@ const websiteJsonLd = {
 					var s = document.createElement("script");
 					s.id = "busuanzi-script";
 					s.async = true;
+					s.referrerPolicy = "no-referrer-when-downgrade";
 					window[callbackName] = function (data) {
+						delete window[callbackName];
+						if (s.parentNode) s.parentNode.removeChild(s);
 						if (requestId !== busuanziRequestId) return;
+						lastBusuanziPath = path;
 						setBusuanziText("site_pv", data.site_pv);
 						setBusuanziText("page_pv", data.page_pv);
 						setBusuanziText("site_uv", data.site_uv);
-						delete window[callbackName];
-						if (s.parentNode) s.parentNode.removeChild(s);
 					};
 					s.onerror = function () {
 						delete window[callbackName];
+						if (requestId === busuanziRequestId && window.location.pathname + window.location.search === path && (retryCount || 0) < 2) {
+							window.setTimeout(function () {
+								loadBusuanzi(true, (retryCount || 0) + 1);
+							}, 800);
+						}
 					};
 					s.src = new URL("/busuanzi?jsonpCallback=" + callbackName, busuanziSrc).toString();
 					document.head.appendChild(s);
