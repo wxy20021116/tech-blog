@@ -6,7 +6,18 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 	<meta slot="head" name="robots" content="noindex,nofollow" />
 
 	<section class="moment-shell card-base">
-		<form id="publish-form" class="moment-form">
+		<div id="auth-panel" class="auth-panel" hidden>
+			<div>
+				<p id="auth-title" class="auth-title">需要先完成 GitHub 授权</p>
+				<p id="auth-description" class="auth-description">
+					授权通过后才可以上传图片并发表作品动态。
+				</p>
+			</div>
+			<a id="auth-button" class="auth-button" href="/api/github/login">GitHub 授权</a>
+			<p id="auth-status" class="status" aria-live="polite"></p>
+		</div>
+
+		<form id="publish-form" class="moment-form" hidden>
 			<header class="moment-topbar">
 				<a href="/portfolio/" aria-label="取消">取消</a>
 				<button id="publish-button" type="submit">发表</button>
@@ -27,14 +38,28 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 </MainGridLayout>
 
 <script>
-	const form = document.getElementById("publish-form");
-	const descriptionInput = document.getElementById("description-input");
-	const imageInput = document.getElementById("image-input");
+	const form = document.getElementById("publish-form") as HTMLFormElement | null;
+	const descriptionInput = document.getElementById(
+		"description-input",
+	) as HTMLTextAreaElement | null;
+	const imageInput = document.getElementById(
+		"image-input",
+	) as HTMLInputElement | null;
 	const previewGrid = document.getElementById("preview-grid");
-	const publishButton = document.getElementById("publish-button");
+	const publishButton = document.getElementById(
+		"publish-button",
+	) as HTMLButtonElement | null;
 	const publishStatus = document.getElementById("publish-status");
+	const authPanel = document.getElementById("auth-panel");
+	const authTitle = document.getElementById("auth-title");
+	const authDescription = document.getElementById("auth-description");
+	const authButton = document.getElementById("auth-button");
+	const authStatus = document.getElementById("auth-status");
 
-	let selectedFiles = [];
+	let selectedFiles: File[] = [];
+	let authReady = false;
+
+	initAuth();
 
 	imageInput?.addEventListener("change", () => {
 		selectedFiles = Array.from(imageInput.files || []);
@@ -43,6 +68,11 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 
 	form?.addEventListener("submit", async (event) => {
 		event.preventDefault();
+
+		if (!authReady) {
+			showAuthPanel("需要先完成 GitHub 授权", "授权通过后才可以上传图片并发表作品动态。", "");
+			return;
+		}
 
 		if (!descriptionInput?.value.trim()) {
 			setStatus("先写一点想法。", "error");
@@ -70,10 +100,11 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 					images,
 				}),
 			});
-			const payload = await response.json();
+			const payload = await readJson(response);
 
 			if (response.status === 401) {
-				window.location.href = "/api/github/login";
+				authReady = false;
+				showAuthPanel("授权已失效", "请重新完成 GitHub 授权后再发表。", "");
 				return;
 			}
 
@@ -84,13 +115,97 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 			form.reset();
 			selectedFiles = [];
 			renderPreview();
-			setStatus("发表成功，等待自动部署后就能在作品集看到。", "ok");
+			const commitLink = payload.url ? ` 提交：${payload.url}` : "";
+			setStatus(`发表成功，等待自动部署后就能在作品集看到。${commitLink}`, "ok");
 		} catch (error) {
-			setStatus(error.message || "发布失败，请稍后再试。", "error");
+			setStatus(errorMessage(error, "发布失败，请稍后再试。"), "error");
 		} finally {
 			setBusy(false);
 		}
 	});
+
+	async function initAuth() {
+		const authMessage = getAuthMessage();
+		showAuthPanel("正在检查 GitHub 授权", "稍等一下，正在确认当前登录状态。", authMessage);
+
+		try {
+			const response = await fetch("/api/github/me", {
+				headers: { Accept: "application/json" },
+				cache: "no-store",
+			});
+			const payload = await readJson(response);
+
+			if (!payload.authenticated) {
+				authReady = false;
+				showAuthPanel("需要先完成 GitHub 授权", "授权通过后才可以上传图片并发表作品动态。", authMessage);
+				return;
+			}
+
+			if (!payload.allowed) {
+				authReady = false;
+				showAuthPanel(
+					"当前 GitHub 账号没有发布权限",
+					`已登录 ${payload.login || "GitHub"}，但这个账号不在允许发布名单内。`,
+					authMessage,
+				);
+				return;
+			}
+
+			authReady = true;
+			hideAuthPanel();
+			if (authMessage) {
+				setStatus(authMessage, "ok");
+			}
+		} catch (error) {
+			authReady = false;
+			showAuthPanel(
+				"授权状态检查失败",
+				errorMessage(error, "请稍后重试，或重新点击授权。"),
+				authMessage,
+			);
+		}
+	}
+
+	function getAuthMessage() {
+		const auth = new URLSearchParams(window.location.search).get("auth");
+		if (auth === "ok") return "授权成功，可以发表了。";
+		if (auth === "failed") return "授权失败，请重新点击 GitHub 授权。";
+		if (auth === "missing") return "服务器还没有配置 GitHub OAuth。";
+		return "";
+	}
+
+	function showAuthPanel(title: string, description: string, status: string) {
+		authReady = false;
+		if (form) form.hidden = true;
+		if (authPanel) authPanel.hidden = false;
+		if (authTitle) authTitle.textContent = title;
+		if (authDescription) authDescription.textContent = description;
+		if (authStatus) {
+			authStatus.textContent = status;
+			authStatus.className = `status ${status.includes("成功") ? "ok" : status ? "error" : ""}`;
+		}
+		if (authButton) authButton.removeAttribute("hidden");
+	}
+
+	function hideAuthPanel() {
+		if (authPanel) authPanel.hidden = true;
+		if (form) form.hidden = false;
+	}
+
+	async function readJson(response: Response) {
+		const text = await response.text();
+		if (!text) return {};
+
+		try {
+			return JSON.parse(text);
+		} catch {
+			throw new Error(response.ok ? "接口返回格式异常。" : "服务端返回异常，请稍后再试。");
+		}
+	}
+
+	function errorMessage(error: unknown, fallback: string) {
+		return error instanceof Error && error.message ? error.message : fallback;
+	}
 
 	function renderPreview() {
 		if (!previewGrid) return;
@@ -113,14 +228,14 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		addTile.innerHTML = '<input id="image-input-live" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple /><span>+</span>';
 		previewGrid.appendChild(addTile);
 
-		const liveInput = addTile.querySelector("input");
+		const liveInput = addTile.querySelector("input") as HTMLInputElement | null;
 		liveInput?.addEventListener("change", () => {
 			selectedFiles = Array.from(liveInput.files || []);
 			renderPreview();
 		});
 	}
 
-	function fileToPayload(file) {
+	function fileToPayload(file: File) {
 		return new Promise((resolve, reject) => {
 			const reader = new FileReader();
 			reader.onload = () => {
@@ -135,13 +250,13 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		});
 	}
 
-	function setBusy(value) {
+	function setBusy(value: boolean) {
 		if (!publishButton) return;
 		publishButton.disabled = value;
 		publishButton.textContent = value ? "发表中" : "发表";
 	}
 
-	function setStatus(message, type) {
+	function setStatus(message: string, type: string) {
 		if (!publishStatus) return;
 		publishStatus.textContent = message;
 		publishStatus.className = `status ${type}`;
@@ -159,6 +274,47 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		min-height: 38rem;
 		padding: 1.5rem 1.75rem 2rem;
 		background: #fff;
+	}
+
+	.auth-panel {
+		min-height: 24rem;
+		padding: 2rem;
+		display: grid;
+		align-content: center;
+		justify-items: start;
+		gap: 1rem;
+		background: #fff;
+	}
+
+	.auth-panel[hidden],
+	.moment-form[hidden] {
+		display: none;
+	}
+
+	.auth-title {
+		margin: 0;
+		color: rgb(0 0 0 / 90%);
+		font-size: 1.35rem;
+		font-weight: 800;
+	}
+
+	.auth-description {
+		margin: 0.45rem 0 0;
+		color: rgb(0 0 0 / 58%);
+		line-height: 1.8;
+	}
+
+	.auth-button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 0.45rem;
+		background: #24292f;
+		color: white;
+		font-size: 1rem;
+		font-weight: 700;
+		min-height: 2.6rem;
+		padding: 0 1.1rem;
 	}
 
 	.moment-topbar {
@@ -259,12 +415,14 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 	}
 
 	:global(.dark) .moment-shell,
-	:global(.dark) .moment-form {
+	:global(.dark) .moment-form,
+	:global(.dark) .auth-panel {
 		background: #fff;
 	}
 
 	:global(.dark) .moment-topbar a,
-	:global(.dark) textarea {
+	:global(.dark) textarea,
+	:global(.dark) .auth-title {
 		color: rgb(0 0 0 / 90%);
 	}
 

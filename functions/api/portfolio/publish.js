@@ -5,17 +5,41 @@ const DATA_PATH = "src/data/portfolio.json";
 const IMAGE_DIR = "public/images/portfolio";
 
 export async function onRequestPost({ request, env }) {
+	try {
+		return await publishPortfolioItem(request, env);
+	} catch (error) {
+		return json(
+			{
+				ok: false,
+				message: error.message || "发布失败，请稍后再试。",
+			},
+			{ status: 500 },
+		);
+	}
+}
+
+async function publishPortfolioItem(request, env) {
 	const token = getToken(request);
 
 	if (!token) {
-		return json({ ok: false, message: "需要先完成 GitHub 授权，或填写 GitHub token。" }, { status: 401 });
+		return json(
+			{ ok: false, message: "需要先完成 GitHub 授权，或填写 GitHub token。" },
+			{ status: 401 },
+		);
 	}
 
-	const allowedLogin = (env.GITHUB_ALLOWED_LOGIN || env.GITHUB_OWNER || DEFAULT_OWNER).toLowerCase();
+	const allowedLogin = (
+		env.GITHUB_ALLOWED_LOGIN ||
+		env.GITHUB_OWNER ||
+		DEFAULT_OWNER
+	).toLowerCase();
 	const userResponse = await githubFetch("https://api.github.com/user", token);
 
 	if (!userResponse.ok) {
-		return json({ ok: false, message: "GitHub 授权无效，请重新登录。" }, { status: 401 });
+		return json(
+			{ ok: false, message: "GitHub 授权无效，请重新登录。" },
+			{ status: 401 },
+		);
 	}
 
 	const user = await userResponse.json();
@@ -35,7 +59,9 @@ export async function onRequestPost({ request, env }) {
 	const description = cleanText(payload.description, 500);
 	const title = cleanText(payload.title || createTitle(description), 80);
 	const tag = cleanText(payload.tag || "作品", 30);
-	const images = Array.isArray(payload.images) ? payload.images.slice(0, 30) : [];
+	const images = Array.isArray(payload.images)
+		? payload.images.slice(0, 30)
+		: [];
 
 	if (!title || !description) {
 		return json({ ok: false, message: "先写一点想法。" }, { status: 400 });
@@ -52,14 +78,26 @@ export async function onRequestPost({ request, env }) {
 	const id = createId();
 	const now = new Date().toISOString();
 
-	const refResponse = await githubFetch(`${apiBase}/git/ref/heads/${branch}`, token);
+	const refResponse = await githubFetch(
+		`${apiBase}/git/ref/heads/${branch}`,
+		token,
+	);
 	if (!refResponse.ok) {
-		return json({ ok: false, message: "读取 GitHub 分支失败，请确认账号有仓库写入权限。" }, { status: 403 });
+		return json(
+			{
+				ok: false,
+				message: "读取 GitHub 分支失败，请确认账号有仓库写入权限。",
+			},
+			{ status: 403 },
+		);
 	}
 
 	const ref = await refResponse.json();
 	const baseCommitSha = ref.object.sha;
-	const commitResponse = await githubFetch(`${apiBase}/git/commits/${baseCommitSha}`, token);
+	const commitResponse = await githubFetch(
+		`${apiBase}/git/commits/${baseCommitSha}`,
+		token,
+	);
 	const baseCommit = await commitResponse.json();
 
 	const currentItems = await readPortfolioItems(apiBase, branch, token);
@@ -67,7 +105,10 @@ export async function onRequestPost({ request, env }) {
 	const treeItems = [];
 
 	for (const [index, image] of images.entries()) {
-		const base64 = String(image.content || "").replace(/^data:[^;]+;base64,/, "");
+		const base64 = String(image.content || "").replace(
+			/^data:[^;]+;base64,/,
+			"",
+		);
 		const extension = extensionFromImage(image);
 		const path = `${IMAGE_DIR}/${id}-${index + 1}.${extension}`;
 		const blobSha = await createBlob(apiBase, token, base64);
@@ -116,32 +157,49 @@ export async function onRequestPost({ request, env }) {
 	const tree = await treeResponse.json();
 
 	if (!treeResponse.ok) {
-		return json({ ok: false, message: "创建 Git tree 失败。", detail: tree }, { status: 500 });
+		return json(
+			{ ok: false, message: "创建 Git tree 失败。", detail: tree },
+			{ status: 500 },
+		);
 	}
 
-	const nextCommitResponse = await githubFetch(`${apiBase}/git/commits`, token, {
-		method: "POST",
-		body: JSON.stringify({
-			message: `chore: publish portfolio item ${title}`,
-			tree: tree.sha,
-			parents: [baseCommitSha],
-		}),
-	});
+	const nextCommitResponse = await githubFetch(
+		`${apiBase}/git/commits`,
+		token,
+		{
+			method: "POST",
+			body: JSON.stringify({
+				message: `chore: publish portfolio item ${title}`,
+				tree: tree.sha,
+				parents: [baseCommitSha],
+			}),
+		},
+	);
 	const nextCommit = await nextCommitResponse.json();
 
 	if (!nextCommitResponse.ok) {
-		return json({ ok: false, message: "创建 Git commit 失败。", detail: nextCommit }, { status: 500 });
+		return json(
+			{ ok: false, message: "创建 Git commit 失败。", detail: nextCommit },
+			{ status: 500 },
+		);
 	}
 
-	const updateResponse = await githubFetch(`${apiBase}/git/refs/heads/${branch}`, token, {
-		method: "PATCH",
-		body: JSON.stringify({
-			sha: nextCommit.sha,
-		}),
-	});
+	const updateResponse = await githubFetch(
+		`${apiBase}/git/refs/heads/${branch}`,
+		token,
+		{
+			method: "PATCH",
+			body: JSON.stringify({
+				sha: nextCommit.sha,
+			}),
+		},
+	);
 
 	if (!updateResponse.ok) {
-		return json({ ok: false, message: "更新 main 分支失败，可能刚好有人推送了新提交。" }, { status: 409 });
+		return json(
+			{ ok: false, message: "更新 main 分支失败，可能刚好有人推送了新提交。" },
+			{ status: 409 },
+		);
 	}
 
 	return json({
@@ -152,7 +210,10 @@ export async function onRequestPost({ request, env }) {
 }
 
 async function readPortfolioItems(apiBase, branch, token) {
-	const response = await githubFetch(`${apiBase}/contents/${DATA_PATH}?ref=${branch}`, token);
+	const response = await githubFetch(
+		`${apiBase}/contents/${DATA_PATH}?ref=${branch}`,
+		token,
+	);
 
 	if (response.status === 404) {
 		return [];
@@ -165,7 +226,10 @@ async function readPortfolioItems(apiBase, branch, token) {
 	const payload = await response.json();
 	const content = atob(payload.content.replace(/\s/g, ""));
 	const decoded = decodeURIComponent(
-		Array.from(content, (char) => `%${char.charCodeAt(0).toString(16).padStart(2, "0")}`).join(""),
+		Array.from(
+			content,
+			(char) => `%${char.charCodeAt(0).toString(16).padStart(2, "0")}`,
+		).join(""),
 	);
 
 	try {
@@ -232,11 +296,15 @@ function githubFetch(url, token, options = {}) {
 }
 
 function cleanText(value, maxLength) {
-	return String(value || "").trim().slice(0, maxLength);
+	return String(value || "")
+		.trim()
+		.slice(0, maxLength);
 }
 
 function createTitle(description) {
-	const firstLine = String(description || "").split(/\r?\n/).find((line) => line.trim());
+	const firstLine = String(description || "")
+		.split(/\r?\n/)
+		.find((line) => line.trim());
 	return firstLine ? firstLine.trim().slice(0, 24) : "作品动态";
 }
 
