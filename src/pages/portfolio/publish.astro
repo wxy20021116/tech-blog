@@ -117,8 +117,8 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 	});
 
 	async function initAuth() {
-		const authMessage = getAuthMessage();
-		updateAuthState(false, authMessage || "正在检查 GitHub 授权...", authMessage.includes("成功") ? "ok" : "");
+		const authResult = getAuthResult();
+		updateAuthState(false, authResult.message || "正在检查 GitHub 授权...", authResult.type);
 
 		try {
 			const response = await fetch("/api/github/me", {
@@ -129,7 +129,11 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 
 			if (!payload.authenticated) {
 				authReady = false;
-				updateAuthState(false, authMessage || "需要先完成 GitHub 授权。", authMessage ? "error" : "");
+				const message =
+					authResult.auth === "ok"
+						? "GitHub 已返回授权，但登录状态没有保存成功，请重新点击 GitHub 授权。"
+						: "需要先完成 GitHub 授权。";
+				updateAuthState(false, message, authResult.auth === "ok" ? "error" : "");
 				return;
 			}
 
@@ -140,19 +144,37 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 			}
 
 			authReady = true;
-			updateAuthState(true, authMessage || `授权成功，当前账号：${payload.login || "GitHub"}。`, "ok");
+			updateAuthState(true, `授权成功，当前账号：${payload.login || "GitHub"}。`, "ok");
 		} catch (error) {
 			authReady = false;
 			updateAuthState(false, errorMessage(error, "授权状态检查失败，请稍后重试，或重新点击授权。"), "error");
 		}
 	}
 
-	function getAuthMessage() {
+	function getAuthResult() {
 		const auth = new URLSearchParams(window.location.search).get("auth");
-		if (auth === "ok") return "授权成功，可以发表了。";
-		if (auth === "failed") return "授权失败，请重新点击 GitHub 授权。";
-		if (auth === "missing") return "服务器还没有配置 GitHub OAuth。";
-		return "";
+		if (auth === "ok") {
+			return {
+				auth,
+				message: "GitHub 已返回授权，正在确认账号...",
+				type: "",
+			};
+		}
+		if (auth === "failed") {
+			return {
+				auth,
+				message: "授权失败，请重新点击 GitHub 授权。",
+				type: "error",
+			};
+		}
+		if (auth === "missing") {
+			return {
+				auth,
+				message: "服务器还没有配置 GitHub OAuth。",
+				type: "error",
+			};
+		}
+		return { auth: "", message: "", type: "" };
 	}
 
 	function updateAuthState(ready: boolean, status: string, type: string) {

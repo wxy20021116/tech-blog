@@ -18,19 +18,22 @@ export async function onRequestGet({ request, env }) {
 
 	const headers = new Headers();
 	headers.set("Location", authorizeUrl.toString());
-	headers.set("Set-Cookie", cookie("github_oauth_state", state, { maxAge: 600 }));
+	headers.set("Set-Cookie", cookie(request, "github_oauth_state", state, { maxAge: 600 }));
 
 	return new Response(null, { status: 302, headers });
 }
 
-function cookie(name, value, options = {}) {
+function cookie(request, name, value, options = {}) {
 	const parts = [
 		`${name}=${encodeURIComponent(value)}`,
 		"Path=/",
 		"SameSite=Lax",
-		"Secure",
 		"HttpOnly",
 	];
+
+	if (new URL(request.url).protocol === "https:") {
+		parts.push("Secure");
+	}
 
 	if (options.maxAge) {
 		parts.push(`Max-Age=${options.maxAge}`);

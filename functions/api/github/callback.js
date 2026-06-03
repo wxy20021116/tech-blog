@@ -34,8 +34,8 @@ export async function onRequestGet({ request, env }) {
 
 	const headers = new Headers();
 	headers.set("Location", new URL("/portfolio/publish/?auth=ok", request.url).toString());
-	headers.append("Set-Cookie", cookie("github_oauth_state", "", { maxAge: 0 }));
-	headers.append("Set-Cookie", cookie("github_access_token", tokenPayload.access_token, { maxAge: 60 * 60 * 24 * 30 }));
+	headers.append("Set-Cookie", cookie(request, "github_oauth_state", "", { maxAge: 0 }));
+	headers.append("Set-Cookie", cookie(request, "github_access_token", tokenPayload.access_token, { maxAge: 60 * 60 * 24 * 30 }));
 
 	return new Response(null, { status: 302, headers });
 }
@@ -48,6 +48,7 @@ function parseCookies(cookieHeader) {
 			.filter(Boolean)
 			.map((part) => {
 				const index = part.indexOf("=");
+				if (index === -1) return [decodeURIComponent(part), ""];
 				return [
 					decodeURIComponent(part.slice(0, index)),
 					decodeURIComponent(part.slice(index + 1)),
@@ -56,14 +57,17 @@ function parseCookies(cookieHeader) {
 	);
 }
 
-function cookie(name, value, options = {}) {
+function cookie(request, name, value, options = {}) {
 	const parts = [
 		`${name}=${encodeURIComponent(value)}`,
 		"Path=/",
 		"SameSite=Lax",
-		"Secure",
 		"HttpOnly",
 	];
+
+	if (new URL(request.url).protocol === "https:") {
+		parts.push("Secure");
+	}
 
 	if (typeof options.maxAge === "number") {
 		parts.push(`Max-Age=${options.maxAge}`);

@@ -274,6 +274,7 @@ function parseCookies(cookieHeader) {
 			.filter(Boolean)
 			.map((part) => {
 				const index = part.indexOf("=");
+				if (index === -1) return [decodeURIComponent(part), ""];
 				return [
 					decodeURIComponent(part.slice(0, index)),
 					decodeURIComponent(part.slice(index + 1)),
