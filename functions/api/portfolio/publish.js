@@ -11,6 +11,26 @@ export async function onRequestPost({ request, env }) {
 		return json({ ok: false, message: "需要先完成 GitHub 授权，或填写 GitHub token。" }, { status: 401 });
 	}
 
+	const allowedLogin = (env.GITHUB_ALLOWED_LOGIN || env.GITHUB_OWNER || DEFAULT_OWNER).toLowerCase();
+	const userResponse = await githubFetch("https://api.github.com/user", token);
+
+	if (!userResponse.ok) {
+		return json({ ok: false, message: "GitHub 授权无效，请重新登录。" }, { status: 401 });
+	}
+
+	const user = await userResponse.json();
+	const currentLogin = String(user.login || "").toLowerCase();
+
+	if (currentLogin !== allowedLogin) {
+		return json(
+			{
+				ok: false,
+				message: `当前 GitHub 账号 ${user.login} 没有发布权限，只允许 ${allowedLogin} 发布。`,
+			},
+			{ status: 403 },
+		);
+	}
+
 	const payload = await request.json();
 	const title = cleanText(payload.title, 80);
 	const description = cleanText(payload.description, 500);

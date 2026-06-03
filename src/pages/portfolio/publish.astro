@@ -94,9 +94,11 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 			const payload = await response.json();
 
 			if (payload.authenticated) {
-				authState.textContent = `已授权：${payload.login}`;
-				authState.classList.add("ok");
-				authTip.textContent = "授权有效，发布后会自动提交到 GitHub main 分支并触发 Cloudflare Pages 部署。";
+				authState.textContent = payload.allowed ? `已授权：${payload.login}` : `无发布权限：${payload.login}`;
+				authState.classList.toggle("ok", payload.allowed);
+				authTip.textContent = payload.allowed
+					? "授权有效，发布后会自动提交到 GitHub main 分支并触发 Cloudflare Pages 部署。"
+					: "这个 GitHub 账号不是允许发布的账号，提交时会被服务端拒绝。";
 				return;
 			}
 		} catch {

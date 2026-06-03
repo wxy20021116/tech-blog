@@ -1,19 +1,25 @@
-export async function onRequestGet({ request }) {
+const DEFAULT_ALLOWED_LOGIN = "wxy20021116";
+
+export async function onRequestGet({ request, env }) {
 	const token = getToken(request);
 
 	if (!token) {
-		return json({ authenticated: false });
+		return json({ authenticated: false, allowed: false });
 	}
 
 	const response = await githubFetch("https://api.github.com/user", token);
 
 	if (!response.ok) {
-		return json({ authenticated: false });
+		return json({ authenticated: false, allowed: false });
 	}
 
 	const user = await response.json();
+	const allowedLogin = (env.GITHUB_ALLOWED_LOGIN || env.GITHUB_OWNER || DEFAULT_ALLOWED_LOGIN).toLowerCase();
+	const allowed = String(user.login || "").toLowerCase() === allowedLogin;
+
 	return json({
 		authenticated: true,
+		allowed,
 		login: user.login,
 		avatarUrl: user.avatar_url,
 	});
