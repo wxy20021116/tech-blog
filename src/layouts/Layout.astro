@@ -235,24 +235,49 @@ const websiteJsonLd = {
 			(function () {
 				// ---- 不蒜子 (busuanzi) : reload so page_pv tracks the current URL ----
 				var busuanziTimer = 0;
+				var busuanziRequestId = 0;
+				var lastBusuanziPath = "";
 				function hasBusuanziTarget() {
 					return document.getElementById("busuanzi_value_page_pv")
 						|| document.getElementById("busuanzi_value_site_pv")
 						|| document.getElementById("busuanzi_value_site_uv");
 				}
+				function setBusuanziText(name, value) {
+					var el = document.getElementById("busuanzi_value_" + name);
+					if (el && value != null) el.textContent = value;
+					var container = document.getElementById("busuanzi_container_" + name);
+					if (container) container.style.display = "inline";
+				}
 				function loadBusuanzi() {
 					if (!hasBusuanziTarget()) return;
+					var path = window.location.pathname + window.location.search;
+					if (path === lastBusuanziPath) return;
+					lastBusuanziPath = path;
+					busuanziRequestId += 1;
+					var requestId = busuanziRequestId;
+					var callbackName = "BusuanziCallback_" + Date.now() + "_" + Math.floor(Math.random() * 1000000);
 					var prev = document.getElementById("busuanzi-script");
 					if (prev) prev.remove();
 					var s = document.createElement("script");
 					s.id = "busuanzi-script";
 					s.async = true;
-					s.src = busuanziSrc + (busuanziSrc.indexOf("?") === -1 ? "?" : "&") + "t=" + Date.now();
+					window[callbackName] = function (data) {
+						if (requestId !== busuanziRequestId) return;
+						setBusuanziText("site_pv", data.site_pv);
+						setBusuanziText("page_pv", data.page_pv);
+						setBusuanziText("site_uv", data.site_uv);
+						delete window[callbackName];
+						if (s.parentNode) s.parentNode.removeChild(s);
+					};
+					s.onerror = function () {
+						delete window[callbackName];
+					};
+					s.src = new URL("/busuanzi?jsonpCallback=" + callbackName, busuanziSrc).toString();
 					document.head.appendChild(s);
 				}
 				function scheduleBusuanzi() {
 					window.clearTimeout(busuanziTimer);
-					busuanziTimer = window.setTimeout(loadBusuanzi, 0);
+					busuanziTimer = window.setTimeout(loadBusuanzi, 120);
 				}
 
 				// ---- Giscus comments ----
@@ -313,7 +338,6 @@ const websiteJsonLd = {
 
 				function bindSwup() {
 					if (window.swup && window.swup.hooks) {
-						window.swup.hooks.on("content:replace", refresh);
 						window.swup.hooks.on("page:view", refresh);
 					}
 				}
