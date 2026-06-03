@@ -234,14 +234,25 @@ const websiteJsonLd = {
 		<script is:inline define:vars={{ busuanziEnable: busuanziConfig.enable, busuanziSrc: busuanziConfig.src }}>
 			(function () {
 				// ---- 不蒜子 (busuanzi) : reload so page_pv tracks the current URL ----
+				var busuanziTimer = 0;
+				function hasBusuanziTarget() {
+					return document.getElementById("busuanzi_value_page_pv")
+						|| document.getElementById("busuanzi_value_site_pv")
+						|| document.getElementById("busuanzi_value_site_uv");
+				}
 				function loadBusuanzi() {
+					if (!hasBusuanziTarget()) return;
 					var prev = document.getElementById("busuanzi-script");
 					if (prev) prev.remove();
 					var s = document.createElement("script");
 					s.id = "busuanzi-script";
 					s.async = true;
-					s.src = busuanziSrc;
+					s.src = busuanziSrc + (busuanziSrc.indexOf("?") === -1 ? "?" : "&") + "t=" + Date.now();
 					document.head.appendChild(s);
+				}
+				function scheduleBusuanzi() {
+					window.clearTimeout(busuanziTimer);
+					busuanziTimer = window.setTimeout(loadBusuanzi, 0);
 				}
 
 				// ---- Giscus comments ----
@@ -293,7 +304,7 @@ const websiteJsonLd = {
 				}
 
 				function refresh() {
-					if (busuanziEnable) loadBusuanzi();
+					if (busuanziEnable) scheduleBusuanzi();
 					loadGiscus();
 					ensureThemeObserver();
 				}
@@ -302,6 +313,7 @@ const websiteJsonLd = {
 
 				function bindSwup() {
 					if (window.swup && window.swup.hooks) {
+						window.swup.hooks.on("content:replace", refresh);
 						window.swup.hooks.on("page:view", refresh);
 					}
 				}
