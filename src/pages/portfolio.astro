@@ -1,8 +1,10 @@
 ---
 import { Icon } from "astro-icon/components";
+import works from "../data/portfolio.json";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 
 type WorkItem = {
+	id?: string;
 	title: string;
 	description: string;
 	tag: string;
@@ -10,32 +12,7 @@ type WorkItem = {
 	images: string[];
 };
 
-const works: WorkItem[] = [
-	{
-		title: "WMS / SMT 现场业务系统",
-		description:
-			"把仓储、PDA、生产现场的操作流串起来，重点处理多端协同、扫码流转和状态一致性。",
-		tag: "软件系统",
-		time: "持续迭代",
-		images: [],
-	},
-	{
-		title: "PDA 扫码作业流程",
-		description:
-			"围绕收发料、转运、校验、异常提示做移动端操作界面，让一线人员能直接按流程完成作业。",
-		tag: "移动端",
-		time: "项目成果",
-		images: [],
-	},
-	{
-		title: "电子硬件与实验作品",
-		description:
-			"做过一些电路、模块联调和硬件小作品，偏动手验证，成果图后续会集中放在这里。",
-		tag: "硬件作品",
-		time: "学习实践",
-		images: [],
-	},
-];
+const portfolioWorks = works as WorkItem[];
 ---
 
 <MainGridLayout
@@ -55,8 +32,14 @@ const works: WorkItem[] = [
 		</div>
 	</section>
 
-	<div class="portfolio-feed">
-		{works.map((work) => {
+	{portfolioWorks.length === 0 ? (
+		<section class="empty-state card-base">
+			<Icon name="material-symbols:add-photo-alternate-outline-rounded" />
+			<p>作品图文还没发布。这里会只展示真实成果，不放占位项目。</p>
+		</section>
+	) : (
+		<div class="portfolio-feed">
+			{portfolioWorks.map((work) => {
 			const visibleImages = work.images.slice(0, 9);
 			const hiddenCount = Math.max(work.images.length - 9, 0);
 			const hasImages = visibleImages.length > 0;
@@ -100,8 +83,9 @@ const works: WorkItem[] = [
 					</div>
 				</article>
 			);
-		})}
-	</div>
+			})}
+		</div>
+	)}
 </MainGridLayout>
 
 <style>
@@ -149,6 +133,26 @@ const works: WorkItem[] = [
 	.portfolio-feed {
 		display: grid;
 		gap: 1rem;
+	}
+
+	.empty-state {
+		padding: 2rem;
+		display: grid;
+		place-items: center;
+		gap: 0.65rem;
+		text-align: center;
+		color: rgb(0 0 0 / 55%);
+	}
+
+	.empty-state :global(svg) {
+		font-size: 2.5rem;
+		color: var(--primary);
+		opacity: 0.75;
+	}
+
+	.empty-state p {
+		margin: 0;
+		line-height: 1.75;
 	}
 
 	.work-post {
@@ -333,7 +337,8 @@ const works: WorkItem[] = [
 	}
 
 	:global(.dark) .placeholder,
-	:global(.dark) .post-meta {
+	:global(.dark) .post-meta,
+	:global(.dark) .empty-state {
 		color: rgb(255 255 255 / 50%);
 	}
 </style>
