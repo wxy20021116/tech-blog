@@ -32,13 +32,13 @@ export async function onRequestPost({ request, env }) {
 	}
 
 	const payload = await request.json();
-	const title = cleanText(payload.title, 80);
 	const description = cleanText(payload.description, 500);
+	const title = cleanText(payload.title || createTitle(description), 80);
 	const tag = cleanText(payload.tag || "作品", 30);
 	const images = Array.isArray(payload.images) ? payload.images.slice(0, 30) : [];
 
 	if (!title || !description) {
-		return json({ ok: false, message: "标题和正文都需要填写。" }, { status: 400 });
+		return json({ ok: false, message: "先写一点想法。" }, { status: 400 });
 	}
 
 	if (images.length === 0) {
@@ -233,6 +233,11 @@ function githubFetch(url, token, options = {}) {
 
 function cleanText(value, maxLength) {
 	return String(value || "").trim().slice(0, maxLength);
+}
+
+function createTitle(description) {
+	const firstLine = String(description || "").split(/\r?\n/).find((line) => line.trim());
+	return firstLine ? firstLine.trim().slice(0, 24) : "作品动态";
 }
 
 function extensionFromImage(image) {

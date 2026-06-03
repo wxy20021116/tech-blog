@@ -5,166 +5,58 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 <MainGridLayout title="发布作品" description="隐藏的作品墙发布页面">
 	<meta slot="head" name="robots" content="noindex,nofollow" />
 
-	<section class="publish-card card-base">
-		<div class="publish-head">
-			<div>
-				<p class="eyebrow">Portfolio Publisher</p>
-				<h1>发布作品图文</h1>
-			</div>
-			<div id="auth-state" class="auth-state">检查登录状态中...</div>
-		</div>
+	<section class="moment-shell card-base">
+		<form id="publish-form" class="moment-form">
+			<header class="moment-topbar">
+				<a href="/portfolio/" aria-label="取消">取消</a>
+				<button id="publish-button" type="submit">发表</button>
+			</header>
 
-		<div class="auth-panel">
-			<a class="sso-button" href="/api/github/login">使用 GitHub SSO 授权</a>
-			<div class="token-row">
-				<input id="token-input" type="password" autocomplete="off" placeholder="或填写 GitHub fine-grained token" />
-				<button id="save-token" type="button">保存 token</button>
-			</div>
-			<p id="auth-tip" class="tip">
-				SSO 需要 Cloudflare 配置 OAuth 环境变量；token 方式需要 Contents 读写权限。
-			</p>
-		</div>
+			<textarea id="description-input" maxlength="500" rows="6" placeholder="这一刻的想法..."></textarea>
 
-		<form id="publish-form" class="publish-form">
-			<label>
-				<span>标题</span>
-				<input id="title-input" maxlength="80" required placeholder="比如：PDA 出入库扫码流程" />
-			</label>
-
-			<label>
-				<span>一句话介绍</span>
-				<textarea id="description-input" maxlength="500" required rows="5" placeholder="像朋友圈一样写几句话，只说成果，不展开技术细节。"></textarea>
-			</label>
-
-			<label>
-				<span>标签</span>
-				<input id="tag-input" maxlength="30" placeholder="软件系统 / PDA / 硬件作品" />
-			</label>
-
-			<label class="file-zone">
-				<input id="image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple />
-				<span>选择图片</span>
-				<small>图片会上传到 public/images/portfolio/，页面最多展示九宫格。</small>
-			</label>
-
-			<div id="preview-grid" class="preview-grid"></div>
-
-			<div class="actions">
-				<button id="publish-button" type="submit">发布到 GitHub</button>
-				<button id="logout-button" type="button">退出 SSO</button>
+			<div id="preview-grid" class="preview-grid">
+				<label class="add-tile" aria-label="添加图片">
+					<input id="image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple />
+					<span>+</span>
+				</label>
 			</div>
 
-			<p id="publish-status" class="status"></p>
+			<p id="publish-status" class="status" aria-live="polite"></p>
 		</form>
 	</section>
 </MainGridLayout>
 
 <script>
-	const tokenKey = "portfolio_github_token";
-	const tokenInput = document.getElementById("token-input");
-	const saveTokenButton = document.getElementById("save-token");
-	const authState = document.getElementById("auth-state");
-	const authTip = document.getElementById("auth-tip");
 	const form = document.getElementById("publish-form");
-	const titleInput = document.getElementById("title-input");
 	const descriptionInput = document.getElementById("description-input");
-	const tagInput = document.getElementById("tag-input");
 	const imageInput = document.getElementById("image-input");
 	const previewGrid = document.getElementById("preview-grid");
 	const publishButton = document.getElementById("publish-button");
-	const logoutButton = document.getElementById("logout-button");
 	const publishStatus = document.getElementById("publish-status");
 
 	let selectedFiles = [];
-
-	function getStoredToken() {
-		return localStorage.getItem(tokenKey) || "";
-	}
-
-	function authHeaders() {
-		const token = getStoredToken();
-		return token ? { Authorization: `Bearer ${token}` } : {};
-	}
-
-	async function refreshAuthState() {
-		try {
-			const response = await fetch("/api/github/me", {
-				headers: authHeaders(),
-			});
-			const payload = await response.json();
-
-			if (payload.authenticated) {
-				authState.textContent = payload.allowed ? `已授权：${payload.login}` : `无发布权限：${payload.login}`;
-				authState.classList.toggle("ok", payload.allowed);
-				authTip.textContent = payload.allowed
-					? "授权有效，发布后会自动提交到 GitHub main 分支并触发 Cloudflare Pages 部署。"
-					: "这个 GitHub 账号不是允许发布的账号，提交时会被服务端拒绝。";
-				return;
-			}
-		} catch {
-			// Keep the unauthenticated state below.
-		}
-
-		authState.textContent = getStoredToken() ? "token 无效或权限不足" : "未授权";
-		authState.classList.remove("ok");
-	}
-
-	saveTokenButton?.addEventListener("click", () => {
-		const value = tokenInput?.value.trim();
-		if (!value) return;
-		localStorage.setItem(tokenKey, value);
-		if (tokenInput) tokenInput.value = "";
-		refreshAuthState();
-	});
-
-	logoutButton?.addEventListener("click", async () => {
-		localStorage.removeItem(tokenKey);
-		await fetch("/api/github/logout", { method: "POST" });
-		refreshAuthState();
-	});
 
 	imageInput?.addEventListener("change", () => {
 		selectedFiles = Array.from(imageInput.files || []);
 		renderPreview();
 	});
 
-	function renderPreview() {
-		if (!previewGrid) return;
-		previewGrid.innerHTML = "";
-
-		for (const file of selectedFiles.slice(0, 9)) {
-			const item = document.createElement("div");
-			const image = document.createElement("img");
-
-			image.src = URL.createObjectURL(file);
-			image.alt = file.name;
-			item.appendChild(image);
-			previewGrid.appendChild(item);
-		}
-
-		if (selectedFiles.length > 9) {
-			const more = document.createElement("div");
-			more.className = "more";
-			more.textContent = `+${selectedFiles.length - 9}`;
-			previewGrid.appendChild(more);
-		}
-	}
-
 	form?.addEventListener("submit", async (event) => {
 		event.preventDefault();
 
-		if (!titleInput?.value.trim() || !descriptionInput?.value.trim()) {
-			setStatus("标题和介绍都要填写。", "error");
+		if (!descriptionInput?.value.trim()) {
+			setStatus("先写一点想法。", "error");
+			descriptionInput?.focus();
 			return;
 		}
 
 		if (selectedFiles.length === 0) {
-			setStatus("至少选择一张图片。", "error");
+			setStatus("至少添加一张图片。", "error");
 			return;
 		}
 
 		setBusy(true);
-		setStatus("正在读取图片并提交到 GitHub...", "");
+		setStatus("正在发布...", "");
 
 		try {
 			const images = await Promise.all(selectedFiles.map(fileToPayload));
@@ -172,16 +64,18 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
-					...authHeaders(),
 				},
 				body: JSON.stringify({
-					title: titleInput.value,
 					description: descriptionInput.value,
-					tag: tagInput?.value || "作品",
 					images,
 				}),
 			});
 			const payload = await response.json();
+
+			if (response.status === 401) {
+				window.location.href = "/api/github/login";
+				return;
+			}
 
 			if (!response.ok || !payload.ok) {
 				throw new Error(payload.message || "发布失败");
@@ -190,13 +84,41 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 			form.reset();
 			selectedFiles = [];
 			renderPreview();
-			setStatus(`发布成功，提交 ${payload.commit.slice(0, 7)} 已推送，等待 Cloudflare Pages 部署。`, "ok");
+			setStatus("发表成功，等待自动部署后就能在作品集看到。", "ok");
 		} catch (error) {
 			setStatus(error.message || "发布失败，请稍后再试。", "error");
 		} finally {
 			setBusy(false);
 		}
 	});
+
+	function renderPreview() {
+		if (!previewGrid) return;
+		previewGrid.innerHTML = "";
+
+		for (const file of selectedFiles.slice(0, 9)) {
+			const tile = document.createElement("div");
+			const image = document.createElement("img");
+
+			tile.className = "preview-tile";
+			image.src = URL.createObjectURL(file);
+			image.alt = file.name;
+			tile.appendChild(image);
+			previewGrid.appendChild(tile);
+		}
+
+		const addTile = document.createElement("label");
+		addTile.className = "add-tile";
+		addTile.setAttribute("aria-label", "添加图片");
+		addTile.innerHTML = '<input id="image-input-live" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple /><span>+</span>';
+		previewGrid.appendChild(addTile);
+
+		const liveInput = addTile.querySelector("input");
+		liveInput?.addEventListener("change", () => {
+			selectedFiles = Array.from(liveInput.files || []);
+			renderPreview();
+		});
+	}
 
 	function fileToPayload(file) {
 		return new Promise((resolve, reject) => {
@@ -214,10 +136,9 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 	}
 
 	function setBusy(value) {
-		if (publishButton) {
-			publishButton.disabled = value;
-			publishButton.textContent = value ? "发布中..." : "发布到 GitHub";
-		}
+		if (!publishButton) return;
+		publishButton.disabled = value;
+		publishButton.textContent = value ? "发表中" : "发表";
 	}
 
 	function setStatus(message, type) {
@@ -225,252 +146,136 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		publishStatus.textContent = message;
 		publishStatus.className = `status ${type}`;
 	}
-
-	refreshAuthState();
 </script>
 
 <style>
-	.publish-card {
-		padding: 1.5rem;
+	.moment-shell {
+		padding: 0;
+		overflow: hidden;
+		background: #fff;
 	}
 
-	.publish-head {
+	.moment-form {
+		min-height: 38rem;
+		padding: 1.5rem 1.75rem 2rem;
+		background: #fff;
+	}
+
+	.moment-topbar {
 		display: flex;
-		justify-content: space-between;
-		align-items: flex-start;
-		gap: 1rem;
-		margin-bottom: 1rem;
-	}
-
-	.eyebrow {
-		margin: 0 0 0.35rem;
-		font-size: 0.78rem;
-		font-weight: 700;
-		color: var(--primary);
-	}
-
-	h1 {
-		margin: 0;
-		font-size: 1.35rem;
-		line-height: 1.4;
-		font-weight: 800;
-		color: rgb(0 0 0 / 90%);
-	}
-
-	.auth-state {
-		border-radius: 999px;
-		padding: 0.42rem 0.7rem;
-		background: rgb(0 0 0 / 6%);
-		color: rgb(0 0 0 / 60%);
-		font-size: 0.82rem;
-		white-space: nowrap;
-	}
-
-	.auth-state.ok {
-		background: color-mix(in srgb, var(--primary) 12%, transparent);
-		color: var(--primary);
-	}
-
-	.auth-panel,
-	.publish-form {
-		display: grid;
-		gap: 0.9rem;
-	}
-
-	.auth-panel {
-		padding: 1rem;
-		border-radius: 0.5rem;
-		background: rgb(0 0 0 / 4%);
-		margin-bottom: 1.1rem;
-	}
-
-	.sso-button,
-	button {
-		border-radius: 0.45rem;
-		background: var(--primary);
-		color: white;
-		font-weight: 800;
-		min-height: 2.65rem;
-		padding: 0 1rem;
-		display: inline-flex;
 		align-items: center;
-		justify-content: center;
-		transition: opacity 0.2s ease, transform 0.2s ease;
+		justify-content: space-between;
+		margin-bottom: 2.2rem;
 	}
 
-	.sso-button:hover,
-	button:hover {
-		opacity: 0.9;
+	.moment-topbar a {
+		font-size: 1.08rem;
+		color: rgb(0 0 0 / 88%);
 	}
 
-	button:disabled {
+	.moment-topbar button {
+		border-radius: 0.45rem;
+		background: #07c160;
+		color: white;
+		font-size: 1rem;
+		font-weight: 700;
+		min-width: 4.2rem;
+		height: 2.45rem;
+		padding: 0 1rem;
+		transition: opacity 0.2s ease;
+	}
+
+	.moment-topbar button:disabled {
 		opacity: 0.65;
-		cursor: wait;
 	}
 
-	.token-row {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto;
-		gap: 0.65rem;
-	}
-
-	label {
-		display: grid;
-		gap: 0.4rem;
-	}
-
-	label span {
-		font-size: 0.86rem;
-		font-weight: 800;
-		color: rgb(0 0 0 / 72%);
-	}
-
-	input,
 	textarea {
 		width: 100%;
-		border-radius: 0.45rem;
-		border: 1px solid rgb(0 0 0 / 12%);
-		background: rgb(255 255 255 / 70%);
-		color: rgb(0 0 0 / 86%);
-		padding: 0.8rem 0.9rem;
-		outline: none;
-		transition: border-color 0.2s ease, box-shadow 0.2s ease;
-	}
-
-	input:focus,
-	textarea:focus {
-		border-color: var(--primary);
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 16%, transparent);
-	}
-
-	textarea {
+		min-height: 8rem;
+		border: 0;
+		outline: 0;
 		resize: vertical;
-		min-height: 7rem;
+		padding: 0;
+		background: transparent;
+		color: rgb(0 0 0 / 90%);
+		font-size: 1.2rem;
+		line-height: 1.75;
 	}
 
-	.file-zone {
-		border: 1px dashed color-mix(in srgb, var(--primary) 40%, transparent);
-		border-radius: 0.55rem;
-		padding: 1rem;
-		cursor: pointer;
-		background: color-mix(in srgb, var(--primary) 6%, transparent);
-	}
-
-	.file-zone input {
-		display: none;
-	}
-
-	.file-zone span {
-		color: var(--primary);
-	}
-
-	.file-zone small,
-	.tip,
-	.status {
-		line-height: 1.7;
-		color: rgb(0 0 0 / 55%);
-	}
-
-	.tip,
-	.status {
-		margin: 0;
-		font-size: 0.88rem;
+	textarea::placeholder {
+		color: rgb(0 0 0 / 24%);
 	}
 
 	.preview-grid {
+		margin-top: 1.6rem;
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 0.4rem;
+		gap: 0.55rem;
 		max-width: 30rem;
 	}
 
-	.preview-grid div {
-		position: relative;
+	.preview-tile,
+	.add-tile {
 		aspect-ratio: 1 / 1;
+		background: #f5f5f5;
 		overflow: hidden;
-		border-radius: 0.35rem;
-		background: rgb(0 0 0 / 6%);
 	}
 
-	.preview-grid img {
+	.preview-tile img {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
 	}
 
-	.preview-grid .more {
+	.add-tile {
 		display: grid;
 		place-items: center;
-		font-size: 1.3rem;
-		font-weight: 800;
-		color: var(--primary);
+		cursor: pointer;
 	}
 
-	.actions {
-		display: flex;
-		gap: 0.65rem;
-		flex-wrap: wrap;
+	.add-tile input {
+		display: none;
 	}
 
-	#logout-button {
-		background: rgb(0 0 0 / 8%);
-		color: rgb(0 0 0 / 72%);
+	.add-tile span {
+		color: rgb(0 0 0 / 46%);
+		font-size: 4rem;
+		font-weight: 200;
+		line-height: 1;
+	}
+
+	.status {
+		margin: 1.2rem 0 0;
+		line-height: 1.7;
+		color: rgb(0 0 0 / 48%);
 	}
 
 	.status.ok {
-		color: var(--primary);
+		color: #07c160;
 	}
 
 	.status.error {
 		color: #c2410c;
 	}
 
-	:global(.dark) h1 {
-		color: rgb(255 255 255 / 90%);
+	:global(.dark) .moment-shell,
+	:global(.dark) .moment-form {
+		background: #fff;
 	}
 
-	:global(.dark) .auth-state,
-	:global(.dark) #logout-button {
-		background: rgb(255 255 255 / 8%);
-		color: rgb(255 255 255 / 68%);
-	}
-
-	:global(.dark) .auth-panel,
-	:global(.dark) .preview-grid div {
-		background: rgb(255 255 255 / 6%);
-	}
-
-	:global(.dark) label span {
-		color: rgb(255 255 255 / 72%);
-	}
-
-	:global(.dark) input,
+	:global(.dark) .moment-topbar a,
 	:global(.dark) textarea {
-		border-color: rgb(255 255 255 / 12%);
-		background: rgb(255 255 255 / 7%);
-		color: rgb(255 255 255 / 86%);
-	}
-
-	:global(.dark) .file-zone small,
-	:global(.dark) .tip,
-	:global(.dark) .status {
-		color: rgb(255 255 255 / 55%);
+		color: rgb(0 0 0 / 90%);
 	}
 
 	@media (max-width: 640px) {
-		.publish-card {
-			padding: 1rem;
+		.moment-shell {
 			border-radius: 0;
 		}
 
-		.publish-head,
-		.token-row {
-			grid-template-columns: 1fr;
-			display: grid;
-		}
-
-		.auth-state {
-			white-space: normal;
+		.moment-form {
+			min-height: calc(100vh - 5.5rem);
+			padding: 1.25rem 1rem 2rem;
 		}
 
 		.preview-grid {
