@@ -59,6 +59,10 @@ export const siteConfig: SiteConfig = {
 
 export const navBarConfig: NavBarConfig = {
 	links: [
+		{
+			name: "作品集",
+			url: "/portfolio/",
+		},
 		LinkPreset.Home,
 		LinkPreset.Archive,
 		LinkPreset.About,

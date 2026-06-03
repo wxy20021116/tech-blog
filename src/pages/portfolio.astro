@@ -1,0 +1,339 @@
+---
+import { Icon } from "astro-icon/components";
+import MainGridLayout from "../layouts/MainGridLayout.astro";
+
+type WorkItem = {
+	title: string;
+	description: string;
+	tag: string;
+	time: string;
+	images: string[];
+};
+
+const works: WorkItem[] = [
+	{
+		title: "WMS / SMT 现场业务系统",
+		description:
+			"把仓储、PDA、生产现场的操作流串起来，重点处理多端协同、扫码流转和状态一致性。",
+		tag: "软件系统",
+		time: "持续迭代",
+		images: [],
+	},
+	{
+		title: "PDA 扫码作业流程",
+		description:
+			"围绕收发料、转运、校验、异常提示做移动端操作界面，让一线人员能直接按流程完成作业。",
+		tag: "移动端",
+		time: "项目成果",
+		images: [],
+	},
+	{
+		title: "电子硬件与实验作品",
+		description:
+			"做过一些电路、模块联调和硬件小作品，偏动手验证，成果图后续会集中放在这里。",
+		tag: "硬件作品",
+		time: "学习实践",
+		images: [],
+	},
+];
+---
+
+<MainGridLayout
+	title="作品集"
+	description="只放成果图，让面试官第一眼知道我做过什么。"
+>
+	<section class="portfolio-card card-base overflow-hidden">
+		<div class="portfolio-header">
+			<div class="avatar-wrap">
+				<img src="/favicon/blog-logo-192.png" alt="Kris_Wen" />
+			</div>
+			<div class="min-w-0">
+				<h1>Kris_Wen 的作品集</h1>
+				<p>这里不展开技术细节，只放做出来的东西：系统界面、PDA 流程、硬件作品和一些工程实践成果。</p>
+				<p>面试官可以先看图建立直观印象，再回到文章里看具体设计和复盘。</p>
+			</div>
+		</div>
+	</section>
+
+	<div class="portfolio-feed">
+		{works.map((work) => {
+			const visibleImages = work.images.slice(0, 9);
+			const hiddenCount = Math.max(work.images.length - 9, 0);
+			const hasImages = visibleImages.length > 0;
+
+			return (
+				<article class="work-post card-base">
+					<div class="post-head">
+						<div class="post-avatar">
+							<Icon name="material-symbols:deployed-code-outline-rounded" />
+						</div>
+						<div class="post-title">
+							<div class="title-line">
+								<h2>{work.title}</h2>
+								<span>{work.tag}</span>
+							</div>
+							<p>{work.description}</p>
+						</div>
+					</div>
+
+					<div class="image-grid" data-count={hasImages ? visibleImages.length : 1}>
+						{hasImages ? (
+							visibleImages.map((src, index) => (
+								<a class="image-cell" href={src} target="_blank" aria-label={`${work.title} 图片 ${index + 1}`}>
+									<img src={src} alt={`${work.title} 图片 ${index + 1}`} loading="lazy" />
+									{hiddenCount > 0 && index === 8 && <span class="more-mask">+{hiddenCount}</span>}
+								</a>
+							))
+						) : (
+							<div class="image-cell placeholder">
+								<Icon name="material-symbols:add-photo-alternate-outline-rounded" />
+								<span>截图待补</span>
+							</div>
+						)}
+					</div>
+
+					<div class="post-meta">
+						<span>{work.time}</span>
+						<button type="button" aria-label="更多">
+							<Icon name="material-symbols:more-horiz" />
+						</button>
+					</div>
+				</article>
+			);
+		})}
+	</div>
+</MainGridLayout>
+
+<style>
+	.portfolio-card {
+		padding: 1.75rem;
+		margin-bottom: 1rem;
+	}
+
+	.portfolio-header {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		gap: 1rem;
+		align-items: start;
+	}
+
+	.avatar-wrap {
+		width: 4rem;
+		height: 4rem;
+		border-radius: 0.75rem;
+		overflow: hidden;
+		background: color-mix(in srgb, var(--primary) 10%, transparent);
+		flex-shrink: 0;
+	}
+
+	.avatar-wrap img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	h1 {
+		font-size: 1.35rem;
+		line-height: 1.4;
+		font-weight: 800;
+		color: var(--primary);
+		margin: 0 0 0.5rem;
+	}
+
+	.portfolio-header p {
+		margin: 0.3rem 0 0;
+		line-height: 1.8;
+		color: rgb(0 0 0 / 75%);
+	}
+
+	.portfolio-feed {
+		display: grid;
+		gap: 1rem;
+	}
+
+	.work-post {
+		padding: 1.25rem;
+		overflow: hidden;
+	}
+
+	.post-head {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		gap: 0.85rem;
+		align-items: start;
+	}
+
+	.post-avatar {
+		width: 2.75rem;
+		height: 2.75rem;
+		border-radius: 0.65rem;
+		display: grid;
+		place-items: center;
+		background: color-mix(in srgb, var(--primary) 12%, transparent);
+		color: var(--primary);
+		font-size: 1.45rem;
+	}
+
+	.title-line {
+		display: flex;
+		gap: 0.6rem;
+		align-items: center;
+		flex-wrap: wrap;
+	}
+
+	h2 {
+		font-size: 1.05rem;
+		line-height: 1.45;
+		font-weight: 800;
+		color: rgb(0 0 0 / 90%);
+		margin: 0;
+	}
+
+	.title-line span {
+		font-size: 0.78rem;
+		line-height: 1;
+		padding: 0.35rem 0.5rem;
+		border-radius: 999px;
+		color: var(--primary);
+		background: color-mix(in srgb, var(--primary) 10%, transparent);
+	}
+
+	.post-title p {
+		margin: 0.45rem 0 0;
+		line-height: 1.75;
+		color: rgb(0 0 0 / 75%);
+	}
+
+	.image-grid {
+		margin-left: 3.6rem;
+		margin-top: 0.9rem;
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 0.35rem;
+		max-width: 34rem;
+	}
+
+	.image-grid[data-count="1"] {
+		grid-template-columns: minmax(10rem, 18rem);
+	}
+
+	.image-grid[data-count="2"],
+	.image-grid[data-count="4"] {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.image-cell {
+		position: relative;
+		display: block;
+		aspect-ratio: 1 / 1;
+		overflow: hidden;
+		border-radius: 0.35rem;
+		background: var(--btn-plain-bg-hover);
+	}
+
+	.image-cell img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform 0.2s ease;
+	}
+
+	.image-cell:hover img {
+		transform: scale(1.04);
+	}
+
+	.placeholder {
+		display: grid;
+		place-items: center;
+		align-content: center;
+		gap: 0.35rem;
+		border: 1px dashed color-mix(in srgb, var(--primary) 35%, transparent);
+		color: rgb(0 0 0 / 50%);
+		font-size: 0.9rem;
+	}
+
+	.placeholder :global(svg) {
+		font-size: 2rem;
+		color: var(--primary);
+		opacity: 0.75;
+	}
+
+	.more-mask {
+		position: absolute;
+		inset: 0;
+		display: grid;
+		place-items: center;
+		background: rgba(0, 0, 0, 0.55);
+		color: white;
+		font-size: 1.4rem;
+		font-weight: 800;
+	}
+
+	.post-meta {
+		margin-left: 3.6rem;
+		margin-top: 0.8rem;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		color: rgb(0 0 0 / 50%);
+		font-size: 0.86rem;
+	}
+
+	.post-meta button {
+		width: 2.5rem;
+		height: 1.8rem;
+		border-radius: 0.4rem;
+		display: grid;
+		place-items: center;
+		background: var(--btn-plain-bg-hover);
+		color: rgb(0 0 0 / 75%);
+		transition: background 0.2s ease, color 0.2s ease;
+	}
+
+	.post-meta button:hover {
+		background: var(--btn-plain-bg-active);
+		color: var(--primary);
+	}
+
+	@media (max-width: 640px) {
+		.portfolio-card,
+		.work-post {
+			padding: 1rem;
+			border-radius: 0;
+		}
+
+		.portfolio-header {
+			grid-template-columns: 1fr;
+		}
+
+		.post-avatar {
+			width: 2.4rem;
+			height: 2.4rem;
+			font-size: 1.25rem;
+		}
+
+		.image-grid,
+		.post-meta {
+			margin-left: 0;
+		}
+
+		.image-grid {
+			max-width: none;
+		}
+	}
+
+	:global(.dark) .portfolio-header p,
+	:global(.dark) .post-title p,
+	:global(.dark) .post-meta button {
+		color: rgb(255 255 255 / 75%);
+	}
+
+	:global(.dark) h2 {
+		color: rgb(255 255 255 / 90%);
+	}
+
+	:global(.dark) .placeholder,
+	:global(.dark) .post-meta {
+		color: rgb(255 255 255 / 50%);
+	}
+</style>
