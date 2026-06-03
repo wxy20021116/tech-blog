@@ -1,5 +1,4 @@
 ---
-import path from "node:path";
 import License from "@components/misc/License.astro";
 import Markdown from "@components/misc/Markdown.astro";
 import Giscus from "@components/comment/Giscus.astro";
@@ -8,7 +7,7 @@ import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
 import { getRelatedPosts, getSortedPosts } from "@utils/content-utils";
-import { getDir, getPostOgImageUrlBySlug, getPostUrlBySlug } from "@utils/url-utils";
+import { getPostOgImageUrlBySlug, getPostUrlBySlug } from "@utils/url-utils";
 import { Icon } from "astro-icon/components";
 import { busuanziConfig, licenseConfig } from "src/config";
 import ImageWrapper from "../../components/misc/ImageWrapper.astro";
@@ -30,7 +29,6 @@ const { Content, headings } = await entry.render();
 const { remarkPluginFrontmatter } = await entry.render();
 
 const relatedPosts = await getRelatedPosts(entry.slug, 6);
-const coverImage = entry.data.image || getPostOgImageUrlBySlug(entry.slug);
 const ogImage = getPostOgImageUrlBySlug(entry.slug);
 const absoluteOgImage = new URL(ogImage, Astro.site || Astro.url.origin).toString();
 const postUrl = new URL(
@@ -81,7 +79,7 @@ const jsonLd = {
 };
 ---
 <MainGridLayout
-    banner={coverImage}
+    banner={ogImage}
     title={entry.data.title}
     description={entry.data.description}
     lang={entry.data.lang}
@@ -150,14 +148,9 @@ const jsonLd = {
                         tags={entry.data.tags}
                         category={entry.data.category}
                 ></PostMetadata>
-                {!coverImage && <div class="border-[var(--line-divider)] border-dashed border-b-[1px] mb-5"></div>}
             </div>
 
-            <!-- always show cover as long as it has one -->
-
-            {coverImage &&
-                <ImageWrapper id="post-cover" src={coverImage} basePath={path.join("content/posts/", getDir(entry.id))} class="mb-8 rounded-xl banner-container onload-animation"/>
-            }
+            <ImageWrapper id="post-cover" src={ogImage} class="mb-8 rounded-xl banner-container onload-animation"/>
 
 
             <Markdown class="mb-6 markdown-content onload-animation">
