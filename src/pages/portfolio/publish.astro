@@ -64,9 +64,9 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 	});
 
 	tokenButton?.addEventListener("click", async () => {
-		const token = tokenInput?.value.trim() || "";
+		const token = normalizeGitHubToken(tokenInput?.value || "");
 		if (!token) {
-			updateAuthState(false, "请先粘贴 GitHub token。", "error");
+			updateAuthState(false, "请粘贴完整的 GitHub token，不要包含中文、空格或说明文字。", "error");
 			tokenInput?.focus();
 			return;
 		}
@@ -215,10 +215,19 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 
 	function getAuthToken() {
 		try {
-			return sessionStorage.getItem(AUTH_TOKEN_KEY) || "";
+			const token = normalizeGitHubToken(sessionStorage.getItem(AUTH_TOKEN_KEY) || "");
+			if (!token) clearAuthToken();
+			return token;
 		} catch {
 			return "";
 		}
+	}
+
+	function normalizeGitHubToken(value: string) {
+		const token = value.replace(/\s+/g, "");
+		if (!/^[A-Za-z0-9_]+$/.test(token)) return "";
+		if (!/^(ghp|github_pat|gho|ghu|ghs|ghr)_/.test(token)) return "";
+		return token;
 	}
 
 	function saveAuthToken(token: string) {
