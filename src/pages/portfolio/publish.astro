@@ -48,6 +48,7 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 	const authButton = document.getElementById("auth-button");
 	const authStatus = document.getElementById("auth-status");
 
+	const AUTH_TOKEN_KEY = "github_access_token";
 	let selectedFiles: File[] = [];
 	let authReady = false;
 
@@ -84,9 +85,9 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 			const images = await Promise.all(selectedFiles.map(fileToPayload));
 			const response = await fetch("/api/portfolio/publish", {
 				method: "POST",
-				headers: {
+				headers: authHeaders({
 					"Content-Type": "application/json",
-				},
+				}),
 				body: JSON.stringify({
 					description: descriptionInput.value,
 					images,
@@ -122,13 +123,14 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 
 		try {
 			const response = await fetch("/api/github/me", {
-				headers: { Accept: "application/json" },
+				headers: authHeaders({ Accept: "application/json" }),
 				cache: "no-store",
 			});
 			const payload = await readJson(response);
 
 			if (!payload.authenticated) {
 				authReady = false;
+				clearAuthToken();
 				const message =
 					authResult.auth === "ok"
 						? "GitHub 已返回授权，但登录状态没有保存成功，请重新点击 GitHub 授权。"
@@ -148,6 +150,32 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		} catch (error) {
 			authReady = false;
 			updateAuthState(false, errorMessage(error, "授权状态检查失败，请稍后重试，或重新点击授权。"), "error");
+		}
+	}
+
+	function authHeaders(headers: Record<string, string>) {
+		const token = getAuthToken();
+		return token
+			? {
+					...headers,
+					Authorization: `Bearer ${token}`,
+				}
+			: headers;
+	}
+
+	function getAuthToken() {
+		try {
+			return sessionStorage.getItem(AUTH_TOKEN_KEY) || "";
+		} catch {
+			return "";
+		}
+	}
+
+	function clearAuthToken() {
+		try {
+			sessionStorage.removeItem(AUTH_TOKEN_KEY);
+		} catch {
+			// Ignore storage errors so the page can still fall back to cookie auth.
 		}
 	}
 

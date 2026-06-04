@@ -38,7 +38,7 @@ export async function onRequestGet({ request, env }) {
 	headers.set("Content-Type", "text/html; charset=utf-8");
 	headers.set("Cache-Control", "no-store");
 
-	return new Response(redirectHtml(redirectUrl), { status: 200, headers });
+	return new Response(redirectHtml(redirectUrl, tokenPayload.access_token), { status: 200, headers });
 }
 
 function parseCookies(cookieHeader) {
@@ -77,7 +77,7 @@ function cookie(request, name, value, options = {}) {
 	return parts.join("; ");
 }
 
-function redirectHtml(url) {
+function redirectHtml(url, token) {
 	const safeUrl = escapeHtml(url);
 
 	return `<!doctype html>
@@ -89,7 +89,10 @@ function redirectHtml(url) {
 	<title>GitHub 授权成功</title>
 </head>
 <body>
-	<script>location.replace(${JSON.stringify(url)});</script>
+	<script>
+		sessionStorage.setItem("github_access_token", ${JSON.stringify(token)});
+		location.replace(${JSON.stringify(url)});
+	</script>
 	<p>GitHub 授权成功，正在返回发布页...</p>
 </body>
 </html>`;
