@@ -8,6 +8,8 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 	<section class="moment-shell card-base">
 		<div id="auth-panel" class="auth-panel">
 			<a id="auth-button" class="auth-button" href="/api/github/login" data-no-swup>GitHub 授权</a>
+			<input id="token-input" class="token-input" type="password" autocomplete="off" placeholder="或粘贴 GitHub token" />
+			<button id="token-button" class="token-button" type="button">使用 Token</button>
 			<p id="auth-status" class="status" aria-live="polite"></p>
 		</div>
 
@@ -47,6 +49,8 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 	const authPanel = document.getElementById("auth-panel");
 	const authButton = document.getElementById("auth-button");
 	const authStatus = document.getElementById("auth-status");
+	const tokenInput = document.getElementById("token-input") as HTMLInputElement | null;
+	const tokenButton = document.getElementById("token-button") as HTMLButtonElement | null;
 
 	const AUTH_TOKEN_KEY = "github_access_token";
 	let selectedFiles: File[] = [];
@@ -57,6 +61,19 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 	imageInput?.addEventListener("change", () => {
 		selectedFiles = Array.from(imageInput.files || []);
 		renderPreview();
+	});
+
+	tokenButton?.addEventListener("click", async () => {
+		const token = tokenInput?.value.trim() || "";
+		if (!token) {
+			updateAuthState(false, "请先粘贴 GitHub token。", "error");
+			tokenInput?.focus();
+			return;
+		}
+
+		saveAuthToken(token);
+		updateAuthState(false, "正在验证 GitHub token...", "");
+		await initAuth();
 	});
 
 	form?.addEventListener("submit", async (event) => {
@@ -171,6 +188,14 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		}
 	}
 
+	function saveAuthToken(token: string) {
+		try {
+			sessionStorage.setItem(AUTH_TOKEN_KEY, token);
+		} catch {
+			updateAuthState(false, "浏览器无法保存 token，请检查隐私模式或站点存储权限。", "error");
+		}
+	}
+
 	function clearAuthToken() {
 		try {
 			sessionStorage.removeItem(AUTH_TOKEN_KEY);
@@ -213,6 +238,15 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 			authStatus.className = `status ${type}`;
 		}
 		if (authButton) authButton.textContent = ready ? "重新授权" : "GitHub 授权";
+		if (tokenInput) {
+			tokenInput.hidden = ready;
+			tokenInput.disabled = false;
+			if (ready) tokenInput.value = "";
+		}
+		if (tokenButton) {
+			tokenButton.hidden = ready;
+			tokenButton.disabled = false;
+		}
 		if (form) form.classList.toggle("is-disabled", !ready);
 		if (descriptionInput) descriptionInput.disabled = !ready;
 		if (imageInput) imageInput.disabled = !ready;
@@ -326,6 +360,25 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		font-weight: 700;
 		min-height: 2.6rem;
 		padding: 0 1.1rem;
+	}
+
+	.token-input {
+		width: min(17rem, 32vw);
+		min-height: 2.6rem;
+		border: 1px solid rgb(0 0 0 / 14%);
+		border-radius: 0.45rem;
+		padding: 0 0.8rem;
+		color: rgb(0 0 0 / 84%);
+		background: #fff;
+	}
+
+	.token-button {
+		min-height: 2.6rem;
+		border-radius: 0.45rem;
+		background: #f3f4f6;
+		color: rgb(0 0 0 / 82%);
+		font-weight: 700;
+		padding: 0 0.9rem;
 	}
 
 	.moment-topbar {
@@ -455,6 +508,15 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 	@media (max-width: 640px) {
 		.moment-shell {
 			border-radius: 0;
+		}
+
+		.auth-panel {
+			align-items: stretch;
+			flex-direction: column;
+		}
+
+		.token-input {
+			width: 100%;
 		}
 
 		.moment-form {
