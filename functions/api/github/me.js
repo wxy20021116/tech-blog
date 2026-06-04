@@ -4,13 +4,13 @@ export async function onRequestGet({ request, env }) {
 	const token = getToken(request);
 
 	if (!token) {
-		return json({ authenticated: false, allowed: false });
+		return json({ authenticated: false, allowed: false, reason: "missing_token" });
 	}
 
 	const response = await githubFetch("https://api.github.com/user", token);
 
 	if (!response.ok) {
-		return json({ authenticated: false, allowed: false });
+		return json({ authenticated: false, allowed: false, reason: "invalid_token" });
 	}
 
 	const user = await response.json();

@@ -73,7 +73,7 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 
 		saveAuthToken(token);
 		updateAuthState(false, "正在验证 GitHub token...", "");
-		await initAuth();
+		await verifyManualToken(token);
 	});
 
 	form?.addEventListener("submit", async (event) => {
@@ -167,6 +167,39 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		} catch (error) {
 			authReady = false;
 			updateAuthState(false, errorMessage(error, "授权状态检查失败，请稍后重试，或重新点击授权。"), "error");
+		}
+	}
+
+	async function verifyManualToken(token: string) {
+		try {
+			const response = await fetch("/api/github/me", {
+				headers: {
+					Accept: "application/json",
+					Authorization: `Bearer ${token}`,
+				},
+				cache: "no-store",
+			});
+			const payload = await readJson(response);
+
+			if (!payload.authenticated) {
+				authReady = false;
+				clearAuthToken();
+				updateAuthState(false, "GitHub token 无效，请确认复制的是完整 token。", "error");
+				return;
+			}
+
+			if (!payload.allowed) {
+				authReady = false;
+				updateAuthState(false, `token 属于 ${payload.login || "GitHub"}，但这个账号不在允许发布名单内。`, "error");
+				return;
+			}
+
+			authReady = true;
+			window.history.replaceState({}, "", window.location.pathname);
+			updateAuthState(true, `Token 验证成功，当前账号：${payload.login || "GitHub"}。`, "ok");
+		} catch (error) {
+			authReady = false;
+			updateAuthState(false, errorMessage(error, "token 验证失败，请稍后重试。"), "error");
 		}
 	}
 
