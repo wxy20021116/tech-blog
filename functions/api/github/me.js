@@ -67,6 +67,7 @@ function json(payload, init = {}) {
 	return new Response(JSON.stringify(payload), {
 		...init,
 		headers: {
+			"Cache-Control": "no-store",
 			"Content-Type": "application/json",
 			...(init.headers || {}),
 		},

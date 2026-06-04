@@ -32,11 +32,13 @@ export async function onRequestGet({ request, env }) {
 		return Response.redirect(new URL("/portfolio/publish/?auth=failed", request.url), 302);
 	}
 
+	const redirectUrl = new URL("/portfolio/publish/?auth=ok", request.url).toString();
 	const headers = new Headers();
-	headers.set("Location", new URL("/portfolio/publish/?auth=ok", request.url).toString());
 	headers.set("Set-Cookie", cookie(request, "github_access_token", tokenPayload.access_token, { maxAge: 60 * 60 * 24 * 30 }));
+	headers.set("Content-Type", "text/html; charset=utf-8");
+	headers.set("Cache-Control", "no-store");
 
-	return new Response(null, { status: 302, headers });
+	return new Response(redirectHtml(redirectUrl), { status: 200, headers });
 }
 
 function parseCookies(cookieHeader) {
@@ -73,4 +75,35 @@ function cookie(request, name, value, options = {}) {
 	}
 
 	return parts.join("; ");
+}
+
+function redirectHtml(url) {
+	const safeUrl = escapeHtml(url);
+
+	return `<!doctype html>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="refresh" content="0;url=${safeUrl}">
+	<meta name="robots" content="noindex,nofollow">
+	<title>GitHub 授权成功</title>
+</head>
+<body>
+	<script>location.replace(${JSON.stringify(url)});</script>
+	<p>GitHub 授权成功，正在返回发布页...</p>
+</body>
+</html>`;
+}
+
+function escapeHtml(value) {
+	return String(value).replace(/[&<>"']/g, (char) => {
+		const entities = {
+			"&": "&amp;",
+			"<": "&lt;",
+			">": "&gt;",
+			'"': "&quot;",
+			"'": "&#39;",
+		};
+		return entities[char];
+	});
 }
