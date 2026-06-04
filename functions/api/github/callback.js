@@ -84,7 +84,6 @@ function redirectHtml(url, token) {
 <html lang="zh-CN">
 <head>
 	<meta charset="utf-8">
-	<meta http-equiv="refresh" content="0;url=${safeUrl}">
 	<meta name="robots" content="noindex,nofollow">
 	<title>GitHub 授权成功</title>
 </head>
@@ -94,6 +93,7 @@ function redirectHtml(url, token) {
 		location.replace(${JSON.stringify(url)});
 	</script>
 	<p>GitHub 授权成功，正在返回发布页...</p>
+	<p><a href="${safeUrl}">如果没有自动返回，请点击这里</a></p>
 </body>
 </html>`;
 }
