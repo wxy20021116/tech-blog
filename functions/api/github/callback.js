@@ -34,8 +34,7 @@ export async function onRequestGet({ request, env }) {
 
 	const headers = new Headers();
 	headers.set("Location", new URL("/portfolio/publish/?auth=ok", request.url).toString());
-	headers.append("Set-Cookie", cookie(request, "github_oauth_state", "", { maxAge: 0 }));
-	headers.append("Set-Cookie", cookie(request, "github_access_token", tokenPayload.access_token, { maxAge: 60 * 60 * 24 * 30 }));
+	headers.set("Set-Cookie", cookie(request, "github_access_token", tokenPayload.access_token, { maxAge: 60 * 60 * 24 * 30 }));
 
 	return new Response(null, { status: 302, headers });
 }
