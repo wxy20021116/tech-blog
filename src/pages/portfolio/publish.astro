@@ -8,8 +8,8 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 	<section class="moment-shell card-base">
 		<div id="auth-panel" class="auth-panel">
 			<a id="auth-button" class="auth-button" href="/api/github/login" data-no-swup>GitHub 授权</a>
-			<input id="token-input" class="token-input" type="password" autocomplete="off" placeholder="或粘贴 GitHub token" />
-			<button id="token-button" class="token-button" type="button">使用 Token</button>
+			<input id="token-input" class="token-input" type="password" autocomplete="off" placeholder="或输入发布密钥" />
+			<button id="token-button" class="token-button" type="button">使用密钥</button>
 			<p id="auth-status" class="status" aria-live="polite"></p>
 		</div>
 
@@ -53,6 +53,7 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 	const tokenButton = document.getElementById("token-button") as HTMLButtonElement | null;
 
 	const AUTH_TOKEN_KEY = "github_access_token";
+	const PUBLISH_KEY_KEY = "portfolio_publish_key";
 	let selectedFiles: File[] = [];
 	let authReady = false;
 
@@ -64,23 +65,23 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 	});
 
 	tokenButton?.addEventListener("click", async () => {
-		const token = normalizeGitHubToken(tokenInput?.value || "");
-		if (!token) {
-			updateAuthState(false, "请粘贴完整的 GitHub token，不要包含中文、空格或说明文字。", "error");
+		const publishKey = normalizePublishKey(tokenInput?.value || "");
+		if (!publishKey) {
+			updateAuthState(false, "请输入发布密钥，不要包含中文、空格或说明文字。", "error");
 			tokenInput?.focus();
 			return;
 		}
 
-		saveAuthToken(token);
-		updateAuthState(false, "正在验证 GitHub token...", "");
-		await verifyManualToken(token);
+		savePublishKey(publishKey);
+		updateAuthState(false, "正在验证发布密钥...", "");
+		await verifyPublishKey(publishKey);
 	});
 
 	form?.addEventListener("submit", async (event) => {
 		event.preventDefault();
 
 		if (!authReady) {
-			updateAuthState(false, "需要先完成 GitHub 授权。", "error");
+			updateAuthState(false, "需要先完成 GitHub 授权，或输入发布密钥。", "error");
 			return;
 		}
 
@@ -114,7 +115,7 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 
 			if (response.status === 401) {
 				authReady = false;
-				updateAuthState(false, "授权已失效，请重新完成 GitHub 授权后再发表。", "error");
+				updateAuthState(false, "授权或发布密钥无效，请重新验证后再发表。", "error");
 				return;
 			}
 
@@ -151,7 +152,7 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 				const message =
 					authResult.auth === "ok"
 						? "GitHub 已返回授权，但登录状态没有保存成功，请重新点击 GitHub 授权。"
-						: "需要先完成 GitHub 授权。";
+						: "需要先完成 GitHub 授权，或输入发布密钥。";
 				updateAuthState(false, message, authResult.auth === "ok" ? "error" : "");
 				return;
 			}
@@ -170,12 +171,12 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		}
 	}
 
-	async function verifyManualToken(token: string) {
+	async function verifyPublishKey(publishKey: string) {
 		try {
 			const response = await fetch("/api/github/me", {
 				headers: {
 					Accept: "application/json",
-					Authorization: `Bearer ${token}`,
+					"X-Portfolio-Publish-Key": publishKey,
 				},
 				cache: "no-store",
 			});
@@ -183,34 +184,34 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 
 			if (!payload.authenticated) {
 				authReady = false;
-				clearAuthToken();
-				updateAuthState(false, "GitHub token 无效，请确认复制的是完整 token。", "error");
+				clearPublishKey();
+				updateAuthState(false, "发布密钥无效，或服务端还没有配置 GitHub 发布 token。", "error");
 				return;
 			}
 
 			if (!payload.allowed) {
 				authReady = false;
-				updateAuthState(false, `token 属于 ${payload.login || "GitHub"}，但这个账号不在允许发布名单内。`, "error");
+				updateAuthState(false, `服务端 token 属于 ${payload.login || "GitHub"}，但这个账号不在允许发布名单内。`, "error");
 				return;
 			}
 
 			authReady = true;
 			window.history.replaceState({}, "", window.location.pathname);
-			updateAuthState(true, `Token 验证成功，当前账号：${payload.login || "GitHub"}。`, "ok");
+			updateAuthState(true, `发布密钥验证成功，当前账号：${payload.login || "GitHub"}。`, "ok");
 		} catch (error) {
 			authReady = false;
-			updateAuthState(false, errorMessage(error, "token 验证失败，请稍后重试。"), "error");
+			updateAuthState(false, errorMessage(error, "发布密钥验证失败，请稍后重试。"), "error");
 		}
 	}
 
 	function authHeaders(headers: Record<string, string>) {
 		const token = getAuthToken();
-		return token
-			? {
-					...headers,
-					Authorization: `Bearer ${token}`,
-				}
-			: headers;
+		const publishKey = getPublishKey();
+		return {
+			...headers,
+			...(token ? { Authorization: `Bearer ${token}` } : {}),
+			...(publishKey ? { "X-Portfolio-Publish-Key": publishKey } : {}),
+		};
 	}
 
 	function getAuthToken() {
@@ -230,11 +231,35 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		return token;
 	}
 
-	function saveAuthToken(token: string) {
+	function getPublishKey() {
 		try {
-			sessionStorage.setItem(AUTH_TOKEN_KEY, token);
+			const publishKey = normalizePublishKey(sessionStorage.getItem(PUBLISH_KEY_KEY) || "");
+			if (!publishKey) clearPublishKey();
+			return publishKey;
 		} catch {
-			updateAuthState(false, "浏览器无法保存 token，请检查隐私模式或站点存储权限。", "error");
+			return "";
+		}
+	}
+
+	function normalizePublishKey(value: string) {
+		const publishKey = value.replace(/\s+/g, "");
+		if (!/^[\x21-\x7e]{4,128}$/.test(publishKey)) return "";
+		return publishKey;
+	}
+
+	function savePublishKey(publishKey: string) {
+		try {
+			sessionStorage.setItem(PUBLISH_KEY_KEY, publishKey);
+		} catch {
+			updateAuthState(false, "浏览器无法保存发布密钥，请检查隐私模式或站点存储权限。", "error");
+		}
+	}
+
+	function clearPublishKey() {
+		try {
+			sessionStorage.removeItem(PUBLISH_KEY_KEY);
+		} catch {
+			// Ignore storage errors so the user can retry in the current page.
 		}
 	}
 
