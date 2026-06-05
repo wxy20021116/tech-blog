@@ -1,5 +1,5 @@
 const DEFAULT_USER = "wxy20021116";
-const MAX_DAYS = 30;
+const MAX_DAYS = 90;
 const CHINA_TIME_OFFSET = 8 * 60 * 60 * 1000;
 
 export async function onRequestGet({ request }) {
