@@ -1,0 +1,131 @@
+---
+import { Icon } from "astro-icon/components";
+
+const user = "wxy20021116";
+---
+
+<github-commit-widget
+	class="card-base block p-4"
+	data-user={user}
+	data-endpoint={`/api/github/contributions?user=${user}&days=14`}
+>
+	<div class="flex items-center justify-between gap-3">
+		<div class="flex items-center gap-2 min-w-0">
+			<Icon name="fa6-brands:github" class="text-[1.25rem] text-neutral-700 dark:text-neutral-200"></Icon>
+			<div class="font-bold text-neutral-900 dark:text-neutral-50 transition truncate">每日提交</div>
+		</div>
+		<a
+			href={`https://github.com/${user}`}
+			target="_blank"
+			rel="noopener"
+			aria-label={`Open ${user} on GitHub`}
+			class="btn-plain h-8 w-8 rounded-lg shrink-0"
+		>
+			<Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.9rem]"></Icon>
+		</a>
+	</div>
+
+	<div class="mt-4 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 items-end">
+		<div data-today-count class="text-4xl leading-none font-black text-[var(--primary)] tabular-nums">--</div>
+		<div class="min-w-0">
+			<div class="text-sm font-semibold text-neutral-700 dark:text-neutral-200 transition">今日提交</div>
+			<div data-summary class="text-xs text-neutral-400 transition">正在读取 GitHub 数据...</div>
+		</div>
+	</div>
+
+	<div data-bars class="mt-4 flex h-14 items-end gap-1.5" aria-label="最近 14 天每日提交数量">
+		{Array.from({ length: 14 }).map(() => <span class="daily-commit-bar skeleton-bar"></span>)}
+	</div>
+
+	<div class="mt-2 flex justify-between text-[0.7rem] text-neutral-400 transition">
+		<span>14 天前</span>
+		<span>今天</span>
+	</div>
+</github-commit-widget>
+
+<style>
+	github-commit-widget .daily-commit-bar {
+		width: 100%;
+		min-width: 0.45rem;
+		border-radius: 999px 999px 0.25rem 0.25rem;
+		background: color-mix(in oklch, oklch(0.78 0.15 var(--hue)) 72%, transparent);
+		transition: height 240ms ease, background 240ms ease, opacity 240ms ease;
+	}
+
+	github-commit-widget .daily-commit-bar[data-empty="true"] {
+		background: color-mix(in oklch, currentColor 14%, transparent);
+		color: rgb(163 163 163);
+	}
+
+	github-commit-widget .skeleton-bar {
+		height: 22%;
+		opacity: 0.35;
+	}
+</style>
+
+<script>
+	// @ts-nocheck
+	class GitHubCommitWidget extends HTMLElement {
+		connectedCallback() {
+			if (this.dataset.loaded === "true") return;
+			this.dataset.loaded = "true";
+			this.load();
+		}
+
+		async load() {
+			const endpoint = this.dataset.endpoint;
+			if (!endpoint) return;
+
+			try {
+				const response = await fetch(endpoint, { cache: "no-store" });
+				const payload = await response.json();
+
+				if (!response.ok || !payload.ok) {
+					throw new Error(payload.message || "GitHub 数据读取失败");
+				}
+
+				this.render(payload);
+			} catch (error) {
+				const summary = this.querySelector("[data-summary]");
+				if (summary) summary.textContent = error instanceof Error ? error.message : "GitHub 数据读取失败";
+				this.querySelectorAll(".daily-commit-bar").forEach((bar) => {
+					if (!(bar instanceof HTMLElement)) return;
+					bar.classList.remove("skeleton-bar");
+					bar.setAttribute("data-empty", "true");
+					bar.style.height = "12%";
+				});
+			}
+		}
+
+		render(payload) {
+			const days = Array.isArray(payload.days) ? payload.days : [];
+			const today = payload.today?.count ?? days.at(-1)?.count ?? 0;
+			const recent7 = days.slice(-7).reduce((sum, day) => sum + Number(day.count || 0), 0);
+			const maxCount = Math.max(1, ...days.map((day) => Number(day.count || 0)));
+
+			const todayCount = this.querySelector("[data-today-count]");
+			const summary = this.querySelector("[data-summary]");
+			const bars = this.querySelector("[data-bars]");
+
+			if (todayCount) todayCount.textContent = String(today);
+			if (summary) summary.textContent = `近 7 天 ${recent7} 次`;
+			if (!(bars instanceof HTMLElement)) return;
+
+			bars.innerHTML = "";
+			for (const day of days) {
+				const count = Number(day.count || 0);
+				const bar = document.createElement("span");
+				bar.className = "daily-commit-bar";
+				bar.style.height = `${count === 0 ? 12 : Math.max(22, Math.round((count / maxCount) * 100))}%`;
+				bar.title = `${day.date}: ${count} 次`;
+				bar.setAttribute("aria-label", `${day.date}: ${count} 次`);
+				if (count === 0) bar.dataset.empty = "true";
+				bars.appendChild(bar);
+			}
+		}
+	}
+
+	if (!customElements.get("github-commit-widget")) {
+		customElements.define("github-commit-widget", GitHubCommitWidget);
+	}
+</script>
