@@ -1,5 +1,5 @@
 const DEFAULT_USER = "wxy20021116";
-const MAX_DAYS = 90;
+const MAX_DAYS = 365;
 const CHINA_TIME_OFFSET = 8 * 60 * 60 * 1000;
 
 export async function onRequestGet({ request }) {
@@ -9,7 +9,7 @@ export async function onRequestGet({ request }) {
 
 	try {
 		const contributions = await readContributions(user, days);
-		const total = contributions.reduce((sum, item) => sum + item.count, 0);
+		const total = contributions.total ?? contributions.reduce((sum, item) => sum + item.count, 0);
 		const today = contributions.at(-1) || null;
 
 		return json(
@@ -17,6 +17,7 @@ export async function onRequestGet({ request }) {
 				ok: true,
 				user,
 				total,
+				totalLabel: days >= 365 ? "近 1 年" : `近 ${days} 天`,
 				today,
 				days: contributions,
 				source: `https://gitee.com/${user}`,
@@ -49,9 +50,14 @@ async function readContributions(user, days) {
 	}
 
 	const profileDays = parseContributionCalendar(html);
+	const yearTotal = getYearTotal(html);
 
 	if (profileDays.length > 0) {
-		return normalizeTimeline(profileDays, days);
+		const timeline = normalizeTimeline(profileDays, days);
+		timeline.total = days >= 365 && yearTotal !== null
+			? yearTotal
+			: timeline.reduce((sum, item) => sum + item.count, 0);
+		return timeline;
 	}
 
 	const fallbackDays = emptyTimeline(days);
@@ -64,6 +70,14 @@ async function readContributions(user, days) {
 
 	const eventDays = await readEventContributions(user, days);
 	return mergeTimelines(fallbackDays, eventDays);
+}
+
+function getYearTotal(html) {
+	const match =
+		html.match(/Contributions last year:\s*(\d+)/i)
+		|| html.match(/最近一年贡献[：:]\s*(\d+)/);
+	if (!match) return null;
+	return Number(match[1]);
 }
 
 async function readEventContributions(user, days) {
@@ -107,15 +121,19 @@ async function fetchText(url) {
 }
 
 async function fetchJson(url) {
-	const response = await fetch(url, {
-		headers: {
-			Accept: "application/json",
-			"User-Agent": "hiauto-tech-blog",
-		},
-	});
+	try {
+		const response = await fetch(url, {
+			headers: {
+				Accept: "application/json",
+				"User-Agent": "hiauto-tech-blog",
+			},
+		});
 
-	if (!response.ok) return [];
-	return response.json();
+		if (!response.ok) return [];
+		return response.json();
+	} catch {
+		return [];
+	}
 }
 
 function parseContributionCalendar(html) {

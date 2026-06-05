@@ -17,9 +17,10 @@ const platforms = [
 		name: "Gitee",
 		icon: "",
 		url: `https://gitee.com/${user}`,
-		endpoint: `/api/gitee/contributions?user=${user}&days=60`,
+		endpoint: `/api/gitee/contributions?user=${user}&days=365`,
 		chart: "heatmap",
-		rangeLabel: "60 天前",
+		rangeLabel: "30 天前",
+		visibleDays: 30,
 	},
 ];
 ---
@@ -40,6 +41,7 @@ const platforms = [
 				data-source={platform.id}
 				data-endpoint={platform.endpoint}
 				data-chart={platform.chart}
+				data-visible-days={platform.visibleDays}
 			>
 				<div class="grid grid-cols-[auto_1fr_auto] gap-x-3 items-center">
 					<div data-today-count class="text-3xl leading-none font-black text-[var(--primary)] tabular-nums">--</div>
@@ -72,7 +74,7 @@ const platforms = [
 					]}
 					aria-label={`${platform.name} 最近每日提交数量`}
 				>
-					{Array.from({ length: platform.chart === "heatmap" ? 60 : 14 }).map(() => (
+					{Array.from({ length: platform.chart === "heatmap" ? platform.visibleDays : 14 }).map(() => (
 						<span class:list={[
 							platform.chart === "heatmap" ? "daily-commit-cell" : "daily-commit-bar",
 							"skeleton-bar",
@@ -264,6 +266,9 @@ const platforms = [
 			const recent7 = days.slice(-7).reduce((sum, day) => sum + Number(day.count || 0), 0);
 			const total = days.reduce((sum, day) => sum + Number(day.count || 0), 0);
 			const maxCount = Math.max(1, ...days.map((day) => Number(day.count || 0)));
+			const visibleDays = Number(row.dataset.visibleDays || 0);
+			const chartDays = visibleDays > 0 ? days.slice(-visibleDays) : days;
+			const chartMaxCount = Math.max(1, ...chartDays.map((day) => Number(day.count || 0)));
 
 			row.dataset.today = String(today);
 			const todayCount = row.querySelector("[data-today-count]");
@@ -272,13 +277,13 @@ const platforms = [
 
 			if (todayCount) todayCount.textContent = String(today);
 			if (summary) summary.textContent = row.dataset.chart === "heatmap"
-				? `近 ${days.length} 天 ${total} 次`
+				? `${payload.totalLabel || `近 ${days.length} 天`} ${payload.total ?? total} 次`
 				: `近 7 天 ${recent7} 次`;
 			if (!(chart instanceof HTMLElement)) return;
 
 			chart.innerHTML = "";
 			if (row.dataset.chart === "heatmap") {
-				this.renderHeatmap(chart, days, maxCount);
+				this.renderHeatmap(chart, chartDays, chartMaxCount);
 				return;
 			}
 
