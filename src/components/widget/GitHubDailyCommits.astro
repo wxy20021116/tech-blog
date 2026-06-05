@@ -74,7 +74,7 @@ const platforms = [
 					]}
 					aria-label={`${platform.name} 最近每日提交数量`}
 				>
-					{Array.from({ length: platform.chart === "heatmap" ? platform.visibleDays : 14 }).map(() => (
+					{Array.from({ length: platform.chart === "heatmap" ? (platform.visibleDays ?? 50) : 14 }).map(() => (
 						<span class:list={[
 							platform.chart === "heatmap" ? "daily-commit-cell" : "daily-commit-bar",
 							"skeleton-bar",
