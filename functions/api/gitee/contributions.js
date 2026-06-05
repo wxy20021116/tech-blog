@@ -55,7 +55,9 @@ async function readContributions(user, days) {
 	}
 
 	const fallbackDays = emptyTimeline(days);
-	const recentCountMatch = html.match(/Recent contributions:\s*(\d+)/i);
+	const recentCountMatch =
+		html.match(/Recent contributions:\s*(\d+)/i)
+		|| html.match(/最近连续贡献[：:]\s*(\d+)/);
 	if (recentCountMatch) {
 		fallbackDays[fallbackDays.length - 1].count = Number(recentCountMatch[1]);
 	}
@@ -118,27 +120,49 @@ async function fetchJson(url) {
 
 function parseContributionCalendar(html) {
 	const days = [];
-	const elementPattern = /<[^>]+data-date="([^"]+)"[^>]*>/g;
+	const elementPattern = /<[^>]+(?:data-date|date)=['"]([^'"]+)['"][^>]*>/g;
 	let match;
 
 	while ((match = elementPattern.exec(html)) !== null) {
 		const [element, date] = match;
+		const content = getAttribute(element, "data-content");
 		const count = getAttributeNumber(element, "data-count")
 			?? getAttributeNumber(element, "data-value")
-			?? getAttributeNumber(element, "data-contributions");
+			?? getAttributeNumber(element, "data-contributions")
+			?? getContributionCount(content);
 
 		if (count !== null) {
-			days.push({ date, count });
+			days.push({ date: normalizeDate(date), count });
 		}
 	}
 
 	return dedupeDays(days);
 }
 
+function getAttribute(element, name) {
+	const match = element.match(new RegExp(`${name}=['"]([^'"]+)['"]`));
+	if (!match) return "";
+	return decodeHtml(match[1]);
+}
+
 function getAttributeNumber(element, name) {
-	const match = element.match(new RegExp(`${name}="(\\d+)"`));
+	const match = element.match(new RegExp(`${name}=['"](\\d+)['"]`));
 	if (!match) return null;
 	return Number(match[1]);
+}
+
+function getContributionCount(value) {
+	if (!value) return null;
+	const match = value.match(/(\d+)\s*(?:个)?贡献/i);
+	if (!match) return null;
+	return Number(match[1]);
+}
+
+function normalizeDate(value) {
+	if (/^\d{8}$/.test(value)) {
+		return `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`;
+	}
+	return value;
 }
 
 function getCommitCount(event) {
@@ -210,6 +234,16 @@ function normalizeUser(value) {
 	const user = value.trim();
 	if (!/^[a-zA-Z0-9_-]{1,39}$/.test(user)) return "";
 	return user;
+}
+
+function decodeHtml(value) {
+	return value
+		.replace(/&amp;/g, "&")
+		.replace(/&lt;/g, "<")
+		.replace(/&gt;/g, ">")
+		.replace(/&quot;/g, '"')
+		.replace(/&#39;/g, "'")
+		.replace(/&#x27;/g, "'");
 }
 
 function normalizeDays(value) {
