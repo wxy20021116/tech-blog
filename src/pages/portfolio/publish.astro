@@ -8,8 +8,6 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 	<section class="moment-shell card-base">
 		<div id="auth-panel" class="auth-panel">
 			<a id="auth-button" class="auth-button" href="/api/github/login" data-no-swup>GitHub 授权</a>
-			<input id="token-input" class="token-input" type="password" autocomplete="off" placeholder="或输入发布密钥" />
-			<button id="token-button" class="token-button" type="button">使用密钥</button>
 			<p id="auth-status" class="status" aria-live="polite"></p>
 		</div>
 
@@ -49,11 +47,8 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 	const authPanel = document.getElementById("auth-panel");
 	const authButton = document.getElementById("auth-button");
 	const authStatus = document.getElementById("auth-status");
-	const tokenInput = document.getElementById("token-input") as HTMLInputElement | null;
-	const tokenButton = document.getElementById("token-button") as HTMLButtonElement | null;
 
 	const AUTH_TOKEN_KEY = "github_access_token";
-	const PUBLISH_KEY_KEY = "portfolio_publish_key";
 	let selectedFiles: File[] = [];
 	let authReady = false;
 
@@ -64,24 +59,11 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		renderPreview();
 	});
 
-	tokenButton?.addEventListener("click", async () => {
-		const publishKey = normalizePublishKey(tokenInput?.value || "");
-		if (!publishKey) {
-			updateAuthState(false, "请输入发布密钥，不要包含中文、空格或说明文字。", "error");
-			tokenInput?.focus();
-			return;
-		}
-
-		savePublishKey(publishKey);
-		updateAuthState(false, "正在验证发布密钥...", "");
-		await verifyPublishKey(publishKey);
-	});
-
 	form?.addEventListener("submit", async (event) => {
 		event.preventDefault();
 
 		if (!authReady) {
-			updateAuthState(false, "需要先完成 GitHub 授权，或输入发布密钥。", "error");
+			updateAuthState(false, "需要先完成 GitHub 授权。", "error");
 			return;
 		}
 
@@ -115,7 +97,7 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 
 			if (response.status === 401) {
 				authReady = false;
-				updateAuthState(false, "授权或发布密钥无效，请重新验证后再发表。", "error");
+				updateAuthState(false, "授权已失效，请重新点击 GitHub 授权后再发表。", "error");
 				return;
 			}
 
@@ -152,7 +134,7 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 				const message =
 					authResult.auth === "ok"
 						? "GitHub 已返回授权，但登录状态没有保存成功，请重新点击 GitHub 授权。"
-						: "需要先完成 GitHub 授权，或输入发布密钥。";
+						: "需要先完成 GitHub 授权。";
 				updateAuthState(false, message, authResult.auth === "ok" ? "error" : "");
 				return;
 			}
@@ -171,46 +153,11 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		}
 	}
 
-	async function verifyPublishKey(publishKey: string) {
-		try {
-			const response = await fetch("/api/github/me", {
-				headers: {
-					Accept: "application/json",
-					"X-Portfolio-Publish-Key": publishKey,
-				},
-				cache: "no-store",
-			});
-			const payload = await readJson(response);
-
-			if (!payload.authenticated) {
-				authReady = false;
-				clearPublishKey();
-				updateAuthState(false, "发布密钥无效，或服务端还没有配置 GitHub 发布 token。", "error");
-				return;
-			}
-
-			if (!payload.allowed) {
-				authReady = false;
-				updateAuthState(false, `服务端 token 属于 ${payload.login || "GitHub"}，但这个账号不在允许发布名单内。`, "error");
-				return;
-			}
-
-			authReady = true;
-			window.history.replaceState({}, "", window.location.pathname);
-			updateAuthState(true, `发布密钥验证成功，当前账号：${payload.login || "GitHub"}。`, "ok");
-		} catch (error) {
-			authReady = false;
-			updateAuthState(false, errorMessage(error, "发布密钥验证失败，请稍后重试。"), "error");
-		}
-	}
-
 	function authHeaders(headers: Record<string, string>) {
 		const token = getAuthToken();
-		const publishKey = getPublishKey();
 		return {
 			...headers,
 			...(token ? { Authorization: `Bearer ${token}` } : {}),
-			...(publishKey ? { "X-Portfolio-Publish-Key": publishKey } : {}),
 		};
 	}
 
@@ -229,38 +176,6 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		if (!/^[A-Za-z0-9_]+$/.test(token)) return "";
 		if (!/^(ghp|github_pat|gho|ghu|ghs|ghr)_/.test(token)) return "";
 		return token;
-	}
-
-	function getPublishKey() {
-		try {
-			const publishKey = normalizePublishKey(sessionStorage.getItem(PUBLISH_KEY_KEY) || "");
-			if (!publishKey) clearPublishKey();
-			return publishKey;
-		} catch {
-			return "";
-		}
-	}
-
-	function normalizePublishKey(value: string) {
-		const publishKey = value.replace(/\s+/g, "");
-		if (!/^[\x21-\x7e]{4,128}$/.test(publishKey)) return "";
-		return publishKey;
-	}
-
-	function savePublishKey(publishKey: string) {
-		try {
-			sessionStorage.setItem(PUBLISH_KEY_KEY, publishKey);
-		} catch {
-			updateAuthState(false, "浏览器无法保存发布密钥，请检查隐私模式或站点存储权限。", "error");
-		}
-	}
-
-	function clearPublishKey() {
-		try {
-			sessionStorage.removeItem(PUBLISH_KEY_KEY);
-		} catch {
-			// Ignore storage errors so the user can retry in the current page.
-		}
 	}
 
 	function clearAuthToken() {
@@ -305,15 +220,6 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 			authStatus.className = `status ${type}`;
 		}
 		if (authButton) authButton.textContent = ready ? "重新授权" : "GitHub 授权";
-		if (tokenInput) {
-			tokenInput.hidden = ready;
-			tokenInput.disabled = false;
-			if (ready) tokenInput.value = "";
-		}
-		if (tokenButton) {
-			tokenButton.hidden = ready;
-			tokenButton.disabled = false;
-		}
 		if (form) form.classList.toggle("is-disabled", !ready);
 		if (descriptionInput) descriptionInput.disabled = !ready;
 		if (imageInput) imageInput.disabled = !ready;
@@ -427,25 +333,6 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		font-weight: 700;
 		min-height: 2.6rem;
 		padding: 0 1.1rem;
-	}
-
-	.token-input {
-		width: min(17rem, 32vw);
-		min-height: 2.6rem;
-		border: 1px solid rgb(0 0 0 / 14%);
-		border-radius: 0.45rem;
-		padding: 0 0.8rem;
-		color: rgb(0 0 0 / 84%);
-		background: #fff;
-	}
-
-	.token-button {
-		min-height: 2.6rem;
-		border-radius: 0.45rem;
-		background: #f3f4f6;
-		color: rgb(0 0 0 / 82%);
-		font-weight: 700;
-		padding: 0 0.9rem;
 	}
 
 	.moment-topbar {
@@ -580,10 +467,6 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 		.auth-panel {
 			align-items: stretch;
 			flex-direction: column;
-		}
-
-		.token-input {
-			width: 100%;
 		}
 
 		.moment-form {

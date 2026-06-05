@@ -1,7 +1,7 @@
 const DEFAULT_ALLOWED_LOGIN = "wxy20021116";
 
 export async function onRequestGet({ request, env }) {
-	const token = getToken(request, env);
+	const token = getToken(request);
 
 	if (!token) {
 		return json({ authenticated: false, allowed: false, reason: "missing_token" });
@@ -25,23 +25,14 @@ export async function onRequestGet({ request, env }) {
 	});
 }
 
-function getToken(request, env) {
+function getToken(request) {
 	const authorization = request.headers.get("Authorization") || "";
 	if (authorization.startsWith("Bearer ")) {
 		return authorization.slice("Bearer ".length);
 	}
 	const cookies = parseCookies(request.headers.get("Cookie") || "");
 	if (cookies.github_access_token) return cookies.github_access_token;
-	if (isValidPublishKey(request, env)) {
-		return env.GITHUB_PUBLISH_TOKEN || env.GITHUB_TOKEN || "";
-	}
 	return "";
-}
-
-function isValidPublishKey(request, env) {
-	const expected = env.PORTFOLIO_PUBLISH_KEY || "";
-	const received = request.headers.get("X-Portfolio-Publish-Key") || "";
-	return Boolean(expected && received && received === expected);
 }
 
 function parseCookies(cookieHeader) {
