@@ -1,5 +1,7 @@
 ---
 import { Icon } from "astro-icon/components";
+import ImageWrapper from "../components/misc/ImageWrapper.astro";
+import { profileConfig } from "../config";
 import works from "../data/portfolio.json";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 
@@ -21,11 +23,9 @@ const portfolioWorks = works as WorkItem[];
 >
 	<section class="portfolio-card card-base overflow-hidden">
 		<div class="portfolio-header">
-			<div class="avatar-wrap">
-				<img src="/favicon/blog-logo-192.png" alt="Kris_Wen" />
-			</div>
+			<ImageWrapper src={profileConfig.avatar || ""} alt={profileConfig.name} class="avatar-wrap" />
 			<div class="min-w-0">
-				<h1>Kris_Wen 的作品集</h1>
+				<h1>{profileConfig.name} 的作品集</h1>
 				<p>这里不展开技术细节，只放做出来的东西：系统界面、PDA 流程、硬件作品和一些工程实践成果。</p>
 				<p>面试官可以先看图建立直观印象，再回到文章里看具体设计和复盘。</p>
 			</div>
@@ -47,12 +47,10 @@ const portfolioWorks = works as WorkItem[];
 			return (
 				<article class="work-post card-base">
 					<div class="post-head">
-						<div class="post-avatar">
-							<Icon name="material-symbols:deployed-code-outline" />
-						</div>
+						<ImageWrapper src={profileConfig.avatar || ""} alt={profileConfig.name} class="post-avatar" />
 						<div class="post-title">
 							<div class="title-line">
-								<h2>{work.title}</h2>
+								<h2>{profileConfig.name}</h2>
 								<span>{work.tag}</span>
 							</div>
 							<p>{work.description}</p>
