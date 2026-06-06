@@ -1,0 +1,97 @@
+---
+import { Icon } from "astro-icon/components";
+import { hitokotoConfig } from "../../config";
+
+const { enable, api } = hitokotoConfig;
+---
+
+{enable && (
+	<div
+		class="hitokoto transition text-50 text-xs text-center mt-3 flex items-center justify-center gap-1.5 px-4 leading-relaxed"
+		data-hitokoto-api={api}
+	>
+		<Icon name="fa6-solid:quote-left" class="text-[0.65rem] opacity-50 shrink-0" />
+		<span class="min-w-0">
+			<button
+				type="button"
+				class="hitokoto-text link-underline decoration-dotted"
+				title="点击换一句"
+			>……</button>
+			<span class="hitokoto-from text-30 ml-0.5"></span>
+		</span>
+	</div>
+)}
+
+<script>
+	// @ts-nocheck
+	// 一言 (hitokoto): a random signature line in the footer.
+	// The bundled script runs once on first load (Astro dedupes it even though the
+	// Footer renders twice). The desktop footer lives inside the Swup `main`
+	// container and is re-created on every navigation, so we repaint the freshly
+	// inserted nodes from a cached quote on `page:view`. A full page reload starts
+	// with an empty cache and therefore draws a brand-new quote ("每次刷新换").
+	(function () {
+		const FALLBACK_API = "https://v1.hitokoto.cn/";
+		const FALLBACK_TEXT = "把日常开发沉淀成可复用的工程经验";
+
+		let current = null; // last fetched payload, reused across Swup navigations
+		let inflight = null; // de-dupes concurrent fetches
+
+		function endpoint() {
+			const el = document.querySelector(".hitokoto");
+			return (el && el.getAttribute("data-hitokoto-api")) || FALLBACK_API;
+		}
+
+		function paint(payload) {
+			const sentence = (payload && payload.hitokoto) || FALLBACK_TEXT;
+			const source = payload && (payload.from_who || payload.from);
+			for (const root of document.querySelectorAll(".hitokoto")) {
+				const textEl = root.querySelector(".hitokoto-text");
+				const fromEl = root.querySelector(".hitokoto-from");
+				if (textEl) textEl.textContent = sentence;
+				if (fromEl) fromEl.textContent = source ? `—— ${source}` : "";
+			}
+		}
+
+		function fetchOne(force) {
+			if (current && !force) {
+				paint(current);
+				return;
+			}
+			if (inflight) return;
+			inflight = fetch(endpoint(), { cache: "no-store" })
+				.then((r) => r.json())
+				.then((data) => {
+					current = data;
+					paint(data);
+				})
+				.catch(() => {
+					if (!current) paint(null);
+				})
+				.finally(() => {
+					inflight = null;
+				});
+		}
+
+		// Click the sentence to draw a fresh one.
+		document.addEventListener("click", (event) => {
+			const target = event.target;
+			if (target && target.closest && target.closest(".hitokoto-text")) {
+				fetchOne(true);
+			}
+		});
+
+		fetchOne(false); // initial paint / fetch
+
+		// Swup replaces the in-`main` footer; repaint the new empty nodes.
+		function onPageView() {
+			if (current) paint(current);
+			else fetchOne(false);
+		}
+		function bind() {
+			window.swup.hooks.on("page:view", onPageView);
+		}
+		if (window?.swup?.hooks) bind();
+		else document.addEventListener("swup:enable", bind);
+	})();
+</script>

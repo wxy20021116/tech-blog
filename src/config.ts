@@ -3,6 +3,7 @@ import type {
 	BusuanziConfig,
 	CommentConfig,
 	ExpressiveCodeConfig,
+	HitokotoConfig,
 	LicenseConfig,
 	NavBarConfig,
 	ProfileConfig,
@@ -126,6 +127,13 @@ export const commentConfig: CommentConfig = {
 		inputPosition: "bottom",
 		lang: "zh-CN",
 	},
+};
+
+// 一言 (hitokoto) — a random one-liner signature shown in the footer,
+// refreshed on every page load (and clickable to draw a new one).
+export const hitokotoConfig: HitokotoConfig = {
+	enable: true,
+	api: "https://v1.hitokoto.cn/",
 };
 
 // 不蒜子 page view / visitor counters. No account or key required.

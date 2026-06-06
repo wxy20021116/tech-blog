@@ -106,6 +106,17 @@ export type CommentConfig = {
 	giscus: GiscusConfig;
 };
 
+export type HitokotoConfig = {
+	/** Show a random 一言 (hitokoto) signature line in the footer. */
+	enable: boolean;
+	/**
+	 * Hitokoto API endpoint returning JSON `{ hitokoto, from, from_who, ... }`.
+	 * Defaults to the official endpoint. Append query params to filter by type,
+	 * e.g. `https://v1.hitokoto.cn/?c=d&c=i` for literature / net quotes.
+	 */
+	api: string;
+};
+
 export type BusuanziConfig = {
 	/** Show 不蒜子 page view / visitor counters. */
 	enable: boolean;
