@@ -1,5 +1,6 @@
 import type {
 	AnalyticsConfig,
+	BackgroundConfig,
 	BusuanziConfig,
 	CommentConfig,
 	ExpressiveCodeConfig,
@@ -148,6 +149,16 @@ export const uptimeConfig: UptimeConfig = {
 export const busuanziConfig: BusuanziConfig = {
 	enable: true,
 	src: "https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js",
+};
+
+// 动态背景 — a fixed full-screen canvas drawn behind the content. The palette
+// follows the site hue and light/dark mode. It respects prefers-reduced-motion
+// (renders a single static frame) and pauses while the tab is hidden.
+export const backgroundConfig: BackgroundConfig = {
+	enable: true,
+	mode: "particles", // "particles" | "stars" | "sakura"
+	opacity: 0.7,
+	density: 1,
 };
 
 // Cloudflare Web Analytics (privacy-friendly, cookieless).
