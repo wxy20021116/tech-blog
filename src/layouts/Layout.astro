@@ -404,9 +404,7 @@ import {getHue, getStoredTheme, setHue, setTheme} from "../utils/setting-utils";
 import {pathsEqual, url} from "../utils/url-utils";
 import {
 	BANNER_HEIGHT,
-	BANNER_HEIGHT_HOME,
 	BANNER_HEIGHT_EXTEND,
-	MAIN_PANEL_OVERLAPS_BANNER_HEIGHT
 } from "../constants/constants";
 import { siteConfig } from '../config';
 
@@ -568,23 +566,9 @@ function init() {
 	showBanner();
 }
 
-function getScrollTop() {
-	return document.body.scrollTop || document.documentElement.scrollTop
-}
-
 function syncNavbarVisibility() {
 	const navbar = document.getElementById('navbar-wrapper')
-	if (!navbar) return
-	if (!bannerEnabled || !document.body.classList.contains('lg:is-home') || window.innerWidth < 1024) {
-		navbar.classList.remove('navbar-hidden')
-		return
-	}
-
-	const NAVBAR_HEIGHT = 72
-	const MAIN_PANEL_EXCESS_HEIGHT = MAIN_PANEL_OVERLAPS_BANNER_HEIGHT * 16
-	const bannerHeight = BANNER_HEIGHT_HOME
-	const threshold = window.innerHeight * (bannerHeight / 100) - NAVBAR_HEIGHT - MAIN_PANEL_EXCESS_HEIGHT - 16
-	navbar.classList.toggle('navbar-hidden', getScrollTop() >= threshold)
+	navbar?.classList.remove('navbar-hidden')
 }
 
 /* Load settings when entering the site */

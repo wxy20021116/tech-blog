@@ -44,7 +44,7 @@ function colorSet(): { particle: string; link: string } {
 
 function particleCount(): number {
 	const density = Math.max(0.2, backgroundConfig.density);
-	return Math.round(70 * density);
+	return Math.round(110 * density);
 }
 
 function options(): ISourceOptions {
@@ -96,7 +96,7 @@ function options(): ISourceOptions {
 				color: colors.link,
 				distance: 145,
 				enable: true,
-				opacity: isDark() ? 0.24 : 0.18,
+				opacity: isDark() ? 0.34 : 0.3,
 				width: 1,
 			},
 			move: {
@@ -117,8 +117,8 @@ function options(): ISourceOptions {
 			},
 			opacity: {
 				value: {
-					min: 0.18,
-					max: 0.52,
+					min: 0.35,
+					max: 0.78,
 				},
 			},
 			shape: {
@@ -126,8 +126,8 @@ function options(): ISourceOptions {
 			},
 			size: {
 				value: {
-					min: 1,
-					max: 2.5,
+					min: 1.4,
+					max: 3.2,
 				},
 			},
 		},
@@ -149,7 +149,7 @@ function ensureStyle(): void {
 			height: 100%;
 			opacity: ${backgroundConfig.opacity};
 			pointer-events: none;
-			z-index: 0;
+			z-index: 1;
 		}
 		#${ROOT_ID} canvas {
 			pointer-events: none !important;

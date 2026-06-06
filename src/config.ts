@@ -155,7 +155,7 @@ export const busuanziConfig: BusuanziConfig = {
 // pointer hover on window, and follows the site hue / light-dark mode.
 export const backgroundConfig: BackgroundConfig = {
 	enable: true,
-	opacity: 0.7,
+	opacity: 0.85,
 	density: 1,
 };
 
