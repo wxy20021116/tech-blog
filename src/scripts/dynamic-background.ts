@@ -15,6 +15,7 @@ import { backgroundConfig } from "../config";
 type Mode = "particles" | "stars" | "sakura";
 
 interface BackgroundController {
+	configKey: string;
 	destroy(): void;
 }
 
@@ -91,8 +92,18 @@ function setupBackground(): void {
 	const mode = backgroundConfig.mode as Mode;
 	if (!enable) return;
 
-	// Re-init safety (e.g. dev HMR): tear down any previous instance first.
-	window.__krisBackground?.destroy();
+	const configKey = JSON.stringify({ mode, density });
+	const existing = window.__krisBackground;
+	if (existing?.configKey === configKey) {
+		const canvas = document.querySelector<HTMLCanvasElement>(".kris-bg-canvas");
+		if (canvas) {
+			canvas.style.opacity = String(opacity);
+			return;
+		}
+	}
+
+	// Re-init only when the effect shape changes (e.g. dev HMR/config edits).
+	existing?.destroy();
 
 	const reducedMotion = window.matchMedia(
 		"(prefers-reduced-motion: reduce)",
@@ -335,6 +346,7 @@ function setupBackground(): void {
 	}
 
 	window.__krisBackground = {
+		configKey,
 		destroy() {
 			stop();
 			window.clearTimeout(resizeTimer);
