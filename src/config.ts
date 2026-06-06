@@ -151,12 +151,10 @@ export const busuanziConfig: BusuanziConfig = {
 	src: "https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js",
 };
 
-// 动态背景 — a fixed full-screen canvas drawn behind the content. The palette
-// follows the site hue and light/dark mode. It respects prefers-reduced-motion
-// (renders a single static frame) and pauses while the tab is hidden.
+// 动态背景 — powered by tsParticles. It stays behind the page, listens for
+// pointer hover on window, and follows the site hue / light-dark mode.
 export const backgroundConfig: BackgroundConfig = {
 	enable: true,
-	mode: "particles", // "particles" | "stars" | "sakura"
 	opacity: 0.7,
 	density: 1,
 };
