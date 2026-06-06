@@ -74,7 +74,7 @@ const swatches = [
 						class="theme-color-range mt-2 w-full"
 						type="range"
 						min="0"
-						max="360"
+						max="359"
 						step="1"
 						value={defaultHue}
 						aria-label="Theme color hue"
@@ -122,20 +122,28 @@ const swatches = [
 		const reset = document.getElementById("theme-color-reset");
 		const swatches = Array.from(root.querySelectorAll("[data-hue]"));
 		const defaultHue = Number.parseInt(reset?.dataset.defaultHue || "200", 10);
+		const hueRange = range instanceof HTMLInputElement ? range : null;
+		const hueSwatches = swatches.filter(
+			(swatch) => swatch instanceof HTMLElement,
+		);
 
 		const getHue = () => {
 			const storedHue = Number.parseInt(localStorage.getItem("hue") || "", 10);
 			return Number.isFinite(storedHue) ? storedHue : defaultHue;
 		};
 
-		const setHue = (hue) => {
-			const normalizedHue = Math.max(0, Math.min(360, Number.parseInt(String(hue), 10) || defaultHue));
+		const setHue = (hue: number | string | undefined) => {
+			const parsedHue = Number.parseInt(String(hue), 10);
+			const normalizedHue = Math.max(
+				0,
+				Math.min(359, Number.isFinite(parsedHue) ? parsedHue : defaultHue),
+			);
 			localStorage.setItem("hue", String(normalizedHue));
 			document.documentElement.style.setProperty("--hue", String(normalizedHue));
-			if (range) {
-				range.value = String(normalizedHue);
+			if (hueRange) {
+				hueRange.value = String(normalizedHue);
 			}
-			swatches.forEach((swatch) => {
+			hueSwatches.forEach((swatch) => {
 				swatch.setAttribute(
 					"aria-pressed",
 					swatch.dataset.hue === String(normalizedHue) ? "true" : "false",
@@ -155,13 +163,13 @@ const swatches = [
 		});
 		button?.addEventListener("mouseenter", openPanel);
 		root.addEventListener("mouseleave", closePanel);
-		range?.addEventListener("input", () => setHue(range.value));
+		hueRange?.addEventListener("input", () => setHue(hueRange.value));
 		reset?.addEventListener("click", () => setHue(defaultHue));
-		swatches.forEach((swatch) => {
+		hueSwatches.forEach((swatch) => {
 			swatch.addEventListener("click", () => setHue(swatch.dataset.hue));
 		});
 		document.addEventListener("click", (event) => {
-			if (!root.contains(event.target)) {
+			if (!(event.target instanceof Node) || !root.contains(event.target)) {
 				closePanel();
 			}
 		});
