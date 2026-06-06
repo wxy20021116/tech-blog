@@ -1,6 +1,5 @@
 import type {
 	AnalyticsConfig,
-	BackgroundConfig,
 	BusuanziConfig,
 	CommentConfig,
 	ExpressiveCodeConfig,
@@ -149,14 +148,6 @@ export const uptimeConfig: UptimeConfig = {
 export const busuanziConfig: BusuanziConfig = {
 	enable: true,
 	src: "https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js",
-};
-
-// 动态背景 — powered by tsParticles. It stays behind the page, listens for
-// pointer hover on window, and follows the site hue / light-dark mode.
-export const backgroundConfig: BackgroundConfig = {
-	enable: true,
-	opacity: 0.85,
-	density: 1,
 };
 
 // Cloudflare Web Analytics (privacy-friendly, cookieless).

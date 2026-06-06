@@ -127,15 +127,6 @@ export type UptimeConfig = {
 	since: string;
 };
 
-export type BackgroundConfig = {
-	/** Render an animated canvas behind the site content. */
-	enable: boolean;
-	/** Canvas opacity, 0–1. Lower it if the effect competes with the content. */
-	opacity: number;
-	/** Density multiplier for the number of particles (1 = default). */
-	density: number;
-};
-
 export type BusuanziConfig = {
 	/** Show 不蒜子 page view / visitor counters. */
 	enable: boolean;
