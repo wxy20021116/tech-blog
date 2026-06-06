@@ -8,6 +8,7 @@ import type {
 	NavBarConfig,
 	ProfileConfig,
 	SiteConfig,
+	UptimeConfig,
 } from "./types/config";
 import { LinkPreset } from "./types/config";
 
@@ -134,6 +135,13 @@ export const commentConfig: CommentConfig = {
 export const hitokotoConfig: HitokotoConfig = {
 	enable: true,
 	api: "https://v1.hitokoto.cn/",
+};
+
+// Live "本站已稳定运行 X 天 X 时 X 分 X 秒" counter in the footer.
+// `since` is when this blog first went live (its first commit).
+export const uptimeConfig: UptimeConfig = {
+	enable: true,
+	since: "2026-05-29T11:29:39+08:00",
 };
 
 // 不蒜子 page view / visitor counters. No account or key required.

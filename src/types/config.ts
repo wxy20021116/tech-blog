@@ -117,6 +117,16 @@ export type HitokotoConfig = {
 	api: string;
 };
 
+export type UptimeConfig = {
+	/** Show the live "本站已稳定运行 …" counter in the footer. */
+	enable: boolean;
+	/**
+	 * When the site went live, as anything `new Date()` accepts (ISO 8601 with a
+	 * timezone is recommended). The footer counts up from this moment in real time.
+	 */
+	since: string;
+};
+
 export type BusuanziConfig = {
 	/** Show 不蒜子 page view / visitor counters. */
 	enable: boolean;

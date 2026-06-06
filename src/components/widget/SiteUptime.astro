@@ -1,0 +1,77 @@
+---
+import { Icon } from "astro-icon/components";
+import { uptimeConfig } from "../../config";
+
+const { enable, since } = uptimeConfig;
+---
+
+{enable && (
+	<div
+		class="site-uptime transition text-50 text-xs text-center mt-2 flex items-center justify-center gap-1.5"
+		data-since={since}
+	>
+		<Icon name="fa6-regular:clock" class="text-[0.75rem] opacity-60 shrink-0" />
+		<span>
+			本站已稳定运行
+			<span class="uptime-d tabular-nums font-medium">--</span> 天
+			<span class="uptime-h tabular-nums font-medium">--</span> 时
+			<span class="uptime-m tabular-nums font-medium">--</span> 分
+			<span class="uptime-s tabular-nums font-medium">--</span> 秒
+		</span>
+	</div>
+)}
+
+<script>
+	// @ts-nocheck
+	// Live site-uptime counter. The bundled script runs once and keeps a single
+	// 1s interval alive for the whole session (it lives outside the Swup
+	// containers, so navigations never disturb it). The desktop footer is
+	// re-created on each Swup navigation, so we also tick on `page:view` to fill
+	// the freshly inserted nodes immediately instead of waiting up to a second.
+	(function () {
+		function startTime() {
+			const el = document.querySelector(".site-uptime");
+			const raw = el && el.getAttribute("data-since");
+			const t = raw ? new Date(raw).getTime() : Number.NaN;
+			return Number.isNaN(t) ? null : t;
+		}
+
+		function pad(n) {
+			return String(n).padStart(2, "0");
+		}
+
+		function tick() {
+			const start = startTime();
+			const nodes = document.querySelectorAll(".site-uptime");
+			if (start == null || !nodes.length) return;
+
+			const total = Math.floor(Math.max(0, Date.now() - start) / 1000);
+			const days = Math.floor(total / 86400);
+			const hours = Math.floor((total % 86400) / 3600);
+			const mins = Math.floor((total % 3600) / 60);
+			const secs = total % 60;
+
+			for (const node of nodes) {
+				const d = node.querySelector(".uptime-d");
+				const h = node.querySelector(".uptime-h");
+				const m = node.querySelector(".uptime-m");
+				const s = node.querySelector(".uptime-s");
+				if (d) d.textContent = String(days);
+				if (h) h.textContent = pad(hours);
+				if (m) m.textContent = pad(mins);
+				if (s) s.textContent = pad(secs);
+			}
+		}
+
+		tick();
+		if (!window.__uptimeTimer) {
+			window.__uptimeTimer = window.setInterval(tick, 1000);
+		}
+
+		function bind() {
+			window.swup.hooks.on("page:view", tick);
+		}
+		if (window?.swup?.hooks) bind();
+		else document.addEventListener("swup:enable", bind);
+	})();
+</script>
