@@ -1,6 +1,6 @@
 ---
 import { Icon } from "astro-icon/components";
-import ImageWrapper from "../components/misc/ImageWrapper.astro";
+import avatarImage from "../assets/images/lhc.jpg";
 import { profileConfig } from "../config";
 import works from "../data/portfolio.json";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
@@ -23,7 +23,9 @@ const portfolioWorks = works as WorkItem[];
 >
 	<section class="portfolio-card card-base overflow-hidden">
 		<div class="portfolio-header">
-			<ImageWrapper src={profileConfig.avatar || ""} alt={profileConfig.name} class="avatar-wrap" />
+			<div class="avatar-wrap">
+				<img src="/favicon/blog-logo-192.png" alt="Kris_Wen" />
+			</div>
 			<div class="min-w-0">
 				<h1>{profileConfig.name} 的作品集</h1>
 				<p>这里不展开技术细节，只放做出来的东西：系统界面、PDA 流程、硬件作品和一些工程实践成果。</p>
@@ -47,7 +49,9 @@ const portfolioWorks = works as WorkItem[];
 			return (
 				<article class="work-post card-base">
 					<div class="post-head">
-						<ImageWrapper src={profileConfig.avatar || ""} alt={profileConfig.name} class="post-avatar" />
+						<div class="post-avatar">
+							<img src={avatarImage.src} alt={profileConfig.name} />
+						</div>
 						<div class="post-title">
 							<div class="title-line">
 								<h2>{profileConfig.name}</h2>
@@ -174,6 +178,14 @@ const portfolioWorks = works as WorkItem[];
 		background: color-mix(in srgb, var(--primary) 12%, transparent);
 		color: var(--primary);
 		font-size: 1.45rem;
+		overflow: hidden;
+		flex-shrink: 0;
+	}
+
+	.post-avatar img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
 	}
 
 	.title-line {
