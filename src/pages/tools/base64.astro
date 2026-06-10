@@ -1,0 +1,186 @@
+---
+import { Icon } from "astro-icon/components";
+import MainGridLayout from "../../layouts/MainGridLayout.astro";
+
+const title = "Base64 编码解码工具";
+const description =
+	"在线 Base64 编码解码工具，支持中文文本、UTF-8、URL Safe Base64、复制结果和一键互换，内容仅在浏览器本地处理。";
+const keywords = [
+	"Base64 编码",
+	"Base64 解码",
+	"Base64 在线",
+	"Base64 转换",
+	"URL Safe Base64",
+	"UTF-8 Base64",
+];
+const pageUrl = new URL(
+	"/tools/base64/",
+	Astro.site || Astro.url.origin,
+).toString();
+const jsonLd = [
+	{
+		"@context": "https://schema.org",
+		"@type": "WebApplication",
+		name: title,
+		description,
+		url: pageUrl,
+		applicationCategory: "DeveloperApplication",
+		operatingSystem: "Any",
+		inLanguage: "zh-CN",
+		offers: {
+			"@type": "Offer",
+			price: "0",
+			priceCurrency: "CNY",
+		},
+	},
+	{
+		"@context": "https://schema.org",
+		"@type": "FAQPage",
+		mainEntity: [
+			{
+				"@type": "Question",
+				name: "Base64 是加密吗？",
+				acceptedAnswer: {
+					"@type": "Answer",
+					text: "Base64 不是加密，只是一种编码方式。任何人拿到 Base64 文本后都可以解码还原原文。",
+				},
+			},
+			{
+				"@type": "Question",
+				name: "这个工具支持中文吗？",
+				acceptedAnswer: {
+					"@type": "Answer",
+					text: "支持。当前工具按 UTF-8 处理文本，可以编码和解码中文、英文、符号等常见文本内容。",
+				},
+			},
+		],
+	},
+	{
+		"@context": "https://schema.org",
+		"@type": "BreadcrumbList",
+		itemListElement: [
+			{
+				"@type": "ListItem",
+				position: 1,
+				name: "工具",
+				item: new URL("/tools/", Astro.site || Astro.url.origin).toString(),
+			},
+			{
+				"@type": "ListItem",
+				position: 2,
+				name: title,
+				item: pageUrl,
+			},
+		],
+	},
+];
+---
+
+<MainGridLayout title={title} description={description} keywords={keywords}>
+	<script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
+	<section class="card-base px-6 py-7 md:px-9 md:py-8">
+		<a href="/tools/" class="link-lg inline-flex items-center text-sm font-medium text-50">
+			<Icon name="material-symbols:arrow-back-rounded" class="mr-1 text-[1.2rem]" />
+			工具箱
+		</a>
+		<div class="mt-4 max-w-3xl">
+			<p class="text-sm font-semibold text-[var(--primary)]">Base64 Converter</p>
+			<h1 class="mt-2 text-2xl font-bold text-90 md:text-3xl">{title}</h1>
+			<p class="mt-3 leading-7 text-75">
+				在线进行 Base64 编码和解码，支持中文 UTF-8 文本和 URL Safe Base64。所有内容只在当前浏览器处理，适合接口调试、Token 片段查看和文本转码。
+			</p>
+		</div>
+	</section>
+
+	<base64-tool class="card-base mt-4 block overflow-hidden">
+		<div class="border-b border-[var(--line-divider)] px-4 py-4 md:px-5">
+			<div class="flex flex-wrap items-center justify-between gap-3">
+				<div>
+					<h2 class="text-base font-bold text-90">转换模式</h2>
+					<p class="mt-1 text-sm text-50">编码会把普通文本转为 Base64；解码会把 Base64 还原为文本。</p>
+				</div>
+				<label class="flex cursor-pointer select-none items-center gap-2 rounded-lg bg-[var(--page-bg)] px-3 py-2 text-sm text-75">
+					<input data-url-safe class="h-4 w-4 accent-[var(--primary)]" type="checkbox" />
+					URL Safe
+				</label>
+			</div>
+		</div>
+
+		<div class="grid gap-px bg-[var(--line-divider)] lg:grid-cols-2">
+			<section class="bg-[var(--card-bg)] p-4 md:p-5">
+				<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+					<h2 class="text-base font-bold text-90">输入内容</h2>
+					<button type="button" data-action="sample" class="btn-regular h-9 rounded-lg px-3 text-sm font-medium">
+						示例
+					</button>
+				</div>
+				<textarea
+					data-input
+					spellcheck="false"
+					placeholder="输入要编码的文本，或输入要解码的 Base64"
+					class="h-[24rem] w-full resize-y rounded-lg border border-black/10 bg-[var(--page-bg)] p-4 font-mono text-sm leading-6 text-90 outline-none transition focus:border-[var(--primary)] dark:border-white/10"
+				></textarea>
+			</section>
+
+			<section class="bg-[var(--card-bg)] p-4 md:p-5">
+				<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+					<h2 class="text-base font-bold text-90">输出结果</h2>
+					<div class="flex flex-wrap gap-2">
+						<button type="button" data-action="encode" class="btn-regular h-9 rounded-lg px-3 text-sm font-medium">
+							编码
+						</button>
+						<button type="button" data-action="decode" class="btn-regular h-9 rounded-lg px-3 text-sm font-medium">
+							解码
+						</button>
+						<button type="button" data-action="copy" class="btn-regular h-9 rounded-lg px-3 text-sm font-medium">
+							复制
+						</button>
+						<button type="button" data-action="swap" class="btn-plain h-9 rounded-lg px-3 text-sm font-medium">
+							互换
+						</button>
+						<button type="button" data-action="clear" class="btn-plain h-9 rounded-lg px-3 text-sm font-medium">
+							清空
+						</button>
+					</div>
+				</div>
+				<textarea
+					data-output
+					spellcheck="false"
+					readonly
+					class="h-[24rem] w-full resize-y rounded-lg border border-black/10 bg-[var(--page-bg)] p-4 font-mono text-sm leading-6 text-90 outline-none transition dark:border-white/10"
+				></textarea>
+			</section>
+		</div>
+		<div class="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line-divider)] px-4 py-3 md:px-5">
+			<p data-status class="text-sm text-50">等待输入文本或 Base64 内容</p>
+			<p class="text-sm text-50">UTF-8 本地处理，不上传服务器</p>
+		</div>
+	</base64-tool>
+
+	<section class="card-base mt-4 px-6 py-6 md:px-9">
+		<h2 class="text-xl font-bold text-90">常见问题</h2>
+		<div class="mt-4 grid gap-4 md:grid-cols-2">
+			<div>
+				<h3 class="font-bold text-90">Base64 是加密吗？</h3>
+				<p class="mt-2 leading-7 text-75">
+					不是。Base64 只是把二进制或文本转换成可安全传输的字符形式，不能用于保护敏感信息。
+				</p>
+			</div>
+			<div>
+				<h3 class="font-bold text-90">URL Safe Base64 有什么区别？</h3>
+				<p class="mt-2 leading-7 text-75">
+					URL Safe 会把 <code>+</code> 和 <code>/</code> 替换为 <code>-</code> 和 <code>_</code>，并常常省略末尾补位符 <code>=</code>，更适合放在 URL 中。
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="card-base mt-4 px-6 py-6 md:px-9">
+		<h2 class="text-xl font-bold text-90">相关工具</h2>
+		<div class="mt-3 flex flex-wrap gap-2">
+			<a href="/tools/" class="btn-regular rounded-lg px-3 py-2 text-sm font-medium">在线工具箱</a>
+			<a href="/tools/json-format/" class="btn-regular rounded-lg px-3 py-2 text-sm font-medium">JSON 格式化</a>
+			<a href="/tools/timestamp/" class="btn-regular rounded-lg px-3 py-2 text-sm font-medium">时间戳转换</a>
+		</div>
+	</section>
+</MainGridLayout>
