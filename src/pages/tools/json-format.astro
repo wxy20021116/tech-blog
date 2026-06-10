@@ -1,0 +1,250 @@
+---
+import { Icon } from "astro-icon/components";
+import MainGridLayout from "../../layouts/MainGridLayout.astro";
+
+const title = "JSON 格式化工具";
+const description =
+	"在线 JSON 格式化、压缩和校验工具，支持本地格式化 JSON、查看错误位置、复制结果，适合接口调试和配置文件整理。";
+const keywords = [
+	"JSON 格式化",
+	"JSON 校验",
+	"JSON 压缩",
+	"JSON 美化",
+	"在线 JSON 工具",
+	"接口调试工具",
+];
+const pageUrl = new URL(
+	"/tools/json-format/",
+	Astro.site || Astro.url.origin,
+).toString();
+const jsonLd = [
+	{
+		"@context": "https://schema.org",
+		"@type": "WebApplication",
+		name: title,
+		description,
+		url: pageUrl,
+		applicationCategory: "DeveloperApplication",
+		operatingSystem: "Any",
+		inLanguage: "zh-CN",
+		offers: {
+			"@type": "Offer",
+			price: "0",
+			priceCurrency: "CNY",
+		},
+	},
+	{
+		"@context": "https://schema.org",
+		"@type": "FAQPage",
+		mainEntity: [
+			{
+				"@type": "Question",
+				name: "JSON 格式化会上传到服务器吗？",
+				acceptedAnswer: {
+					"@type": "Answer",
+					text: "不会。当前工具在浏览器本地解析和格式化 JSON 内容。",
+				},
+			},
+			{
+				"@type": "Question",
+				name: "这个工具可以检查 JSON 语法错误吗？",
+				acceptedAnswer: {
+					"@type": "Answer",
+					text: "可以。输入内容不是合法 JSON 时，页面会显示浏览器解析返回的错误信息。",
+				},
+			},
+		],
+	},
+	{
+		"@context": "https://schema.org",
+		"@type": "BreadcrumbList",
+		itemListElement: [
+			{
+				"@type": "ListItem",
+				position: 1,
+				name: "工具",
+				item: new URL("/tools/", Astro.site || Astro.url.origin).toString(),
+			},
+			{
+				"@type": "ListItem",
+				position: 2,
+				name: title,
+				item: pageUrl,
+			},
+		],
+	},
+];
+---
+
+<MainGridLayout title={title} description={description} keywords={keywords}>
+	<script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
+	<section class="card-base px-6 py-7 md:px-9 md:py-8">
+		<a href="/tools/" class="link-lg inline-flex items-center text-sm font-medium text-50">
+			<Icon name="material-symbols:arrow-back-rounded" class="mr-1 text-[1.2rem]" />
+			工具箱
+		</a>
+		<div class="mt-4 max-w-3xl">
+			<p class="text-sm font-semibold text-[var(--primary)]">JSON Formatter</p>
+			<h1 class="mt-2 text-2xl font-bold text-90 md:text-3xl">{title}</h1>
+			<p class="mt-3 leading-7 text-75">
+				在线格式化、压缩和校验 JSON 数据。内容只在当前浏览器中处理，适合整理接口响应、配置文件和调试参数。
+			</p>
+		</div>
+	</section>
+
+	<json-format-tool class="card-base mt-4 block overflow-hidden">
+		<div class="grid gap-px bg-[var(--line-divider)] lg:grid-cols-2">
+			<section class="bg-[var(--card-bg)] p-4 md:p-5">
+				<div class="mb-3 flex items-center justify-between gap-3">
+					<h2 class="text-base font-bold text-90">输入 JSON</h2>
+					<button type="button" data-action="sample" class="btn-regular h-9 rounded-lg px-3 text-sm font-medium">
+						示例
+					</button>
+				</div>
+				<textarea
+					data-input
+					spellcheck="false"
+					placeholder='{"name":"Kris_Wen","site":"blog.hiauto.me"}'
+					class="h-[24rem] w-full resize-y rounded-lg border border-black/10 bg-[var(--page-bg)] p-4 font-mono text-sm leading-6 text-90 outline-none transition focus:border-[var(--primary)] dark:border-white/10"
+				></textarea>
+			</section>
+
+			<section class="bg-[var(--card-bg)] p-4 md:p-5">
+				<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+					<h2 class="text-base font-bold text-90">输出结果</h2>
+					<div class="flex flex-wrap gap-2">
+						<button type="button" data-action="format" class="btn-regular h-9 rounded-lg px-3 text-sm font-medium">
+							格式化
+						</button>
+						<button type="button" data-action="minify" class="btn-regular h-9 rounded-lg px-3 text-sm font-medium">
+							压缩
+						</button>
+						<button type="button" data-action="copy" class="btn-regular h-9 rounded-lg px-3 text-sm font-medium">
+							复制
+						</button>
+						<button type="button" data-action="clear" class="btn-plain h-9 rounded-lg px-3 text-sm font-medium">
+							清空
+						</button>
+					</div>
+				</div>
+				<textarea
+					data-output
+					spellcheck="false"
+					readonly
+					class="h-[24rem] w-full resize-y rounded-lg border border-black/10 bg-[var(--page-bg)] p-4 font-mono text-sm leading-6 text-90 outline-none transition dark:border-white/10"
+				></textarea>
+			</section>
+		</div>
+		<div class="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line-divider)] px-4 py-3 md:px-5">
+			<p data-status class="text-sm text-50">等待输入 JSON 内容</p>
+			<p class="text-sm text-50">本地处理，不上传服务器</p>
+		</div>
+	</json-format-tool>
+
+	<section class="card-base mt-4 px-6 py-6 md:px-9">
+		<h2 class="text-xl font-bold text-90">常见问题</h2>
+		<div class="mt-4 grid gap-4 md:grid-cols-2">
+			<div>
+				<h3 class="font-bold text-90">JSON 格式化有什么用？</h3>
+				<p class="mt-2 leading-7 text-75">
+					接口返回和配置文件经常是一整行文本，格式化后可以快速查看层级、数组和对象结构。
+				</p>
+			</div>
+			<div>
+				<h3 class="font-bold text-90">JSON 压缩适合什么场景？</h3>
+				<p class="mt-2 leading-7 text-75">
+					压缩会移除缩进和换行，适合放入环境变量、请求参数或需要减少字符长度的配置项。
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="card-base mt-4 px-6 py-6 md:px-9">
+		<h2 class="text-xl font-bold text-90">相关工具</h2>
+		<div class="mt-3 flex flex-wrap gap-2">
+			<a href="/tools/" class="btn-regular rounded-lg px-3 py-2 text-sm font-medium">在线工具箱</a>
+			<span class="rounded-lg bg-[var(--btn-plain-bg-hover)] px-3 py-2 text-sm text-50">时间戳转换</span>
+			<span class="rounded-lg bg-[var(--btn-plain-bg-hover)] px-3 py-2 text-sm text-50">Base64 编码解码</span>
+		</div>
+	</section>
+</MainGridLayout>
+
+<script>
+class JsonFormatTool extends HTMLElement {
+	private input: HTMLTextAreaElement | null = null;
+	private output: HTMLTextAreaElement | null = null;
+	private status: HTMLElement | null = null;
+
+	connectedCallback() {
+		this.input = this.querySelector<HTMLTextAreaElement>("[data-input]");
+		this.output = this.querySelector<HTMLTextAreaElement>("[data-output]");
+		this.status = this.querySelector("[data-status]");
+
+		this.querySelector("[data-action='format']")?.addEventListener("click", () => this.format(2));
+		this.querySelector("[data-action='minify']")?.addEventListener("click", () => this.format(0));
+		this.querySelector("[data-action='copy']")?.addEventListener("click", () => this.copy());
+		this.querySelector("[data-action='clear']")?.addEventListener("click", () => this.clear());
+		this.querySelector("[data-action='sample']")?.addEventListener("click", () => this.loadSample());
+	}
+
+	private setStatus(message: string, isError = false) {
+		if (!this.status) return;
+		this.status.textContent = message;
+		this.status.classList.toggle("text-[var(--primary)]", !isError);
+		this.status.classList.toggle("text-red-500", isError);
+	}
+
+	private format(space: number) {
+		if (!this.input || !this.output) return;
+		const value = this.input.value.trim();
+		if (!value) {
+			this.output.value = "";
+			this.setStatus("请先输入 JSON 内容", true);
+			return;
+		}
+
+		try {
+			const parsed = JSON.parse(value);
+			this.output.value = JSON.stringify(parsed, null, space);
+			this.setStatus(space === 0 ? "JSON 压缩完成" : "JSON 格式化完成");
+		} catch (error) {
+			this.output.value = "";
+			this.setStatus(error instanceof Error ? error.message : "JSON 解析失败", true);
+		}
+	}
+
+	private async copy() {
+		if (!this.output?.value) {
+			this.setStatus("没有可复制的结果", true);
+			return;
+		}
+		await navigator.clipboard.writeText(this.output.value);
+		this.setStatus("结果已复制");
+	}
+
+	private clear() {
+		if (this.input) this.input.value = "";
+		if (this.output) this.output.value = "";
+		this.setStatus("已清空");
+	}
+
+	private loadSample() {
+		if (!this.input) return;
+		this.input.value = JSON.stringify(
+			{
+				site: "Kris_Wen Tech Notes",
+				url: "https://blog.hiauto.me/",
+				tools: ["JSON 格式化", "时间戳转换", "Base64 编码解码"],
+				localOnly: true,
+			},
+			null,
+			0,
+		);
+		this.format(2);
+	}
+}
+
+if (!customElements.get("json-format-tool")) {
+	customElements.define("json-format-tool", JsonFormatTool);
+}
+</script>

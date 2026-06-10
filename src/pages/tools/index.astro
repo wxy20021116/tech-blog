@@ -1,0 +1,130 @@
+---
+import { Icon } from "astro-icon/components";
+import MainGridLayout from "../../layouts/MainGridLayout.astro";
+
+const title = "在线工具箱";
+const description =
+	"Kris_Wen 在线工具箱，提供 JSON 格式化、时间戳转换、Base64 编码解码、Markdown 转 HTML、正则测试、图片压缩等开发常用工具。";
+const keywords = [
+	"在线工具",
+	"开发者工具",
+	"JSON 格式化",
+	"时间戳转换",
+	"Base64 编码解码",
+	"Markdown 转 HTML",
+	"正则表达式测试",
+	"图片压缩",
+	"PDF 转图片",
+];
+const tools = [
+	{
+		name: "JSON 格式化",
+		description: "格式化、压缩和校验 JSON 数据，适合接口调试和配置排查。",
+		url: "/tools/json-format/",
+		icon: "material-symbols:data-object-rounded",
+		status: "可用",
+	},
+	{
+		name: "时间戳转换",
+		description: "Unix 时间戳、毫秒时间戳与本地时间互转。",
+		url: "#",
+		icon: "material-symbols:schedule-rounded",
+		status: "规划中",
+	},
+	{
+		name: "Base64 编码解码",
+		description: "文本 Base64 编码、解码与结果复制。",
+		url: "#",
+		icon: "material-symbols:password-rounded",
+		status: "规划中",
+	},
+	{
+		name: "Markdown 转 HTML",
+		description: "将 Markdown 内容转换为 HTML 片段。",
+		url: "#",
+		icon: "material-symbols:markdown-rounded",
+		status: "规划中",
+	},
+	{
+		name: "正则表达式测试器",
+		description: "测试正则匹配结果，辅助排查表达式。",
+		url: "#",
+		icon: "material-symbols:rule-rounded",
+		status: "规划中",
+	},
+	{
+		name: "图片压缩",
+		description: "在浏览器内压缩图片，降低上传和展示体积。",
+		url: "#",
+		icon: "material-symbols:compress-rounded",
+		status: "规划中",
+	},
+];
+const toolJsonLd = {
+	"@context": "https://schema.org",
+	"@type": "CollectionPage",
+	name: title,
+	description,
+	url: new URL("/tools/", Astro.site || Astro.url.origin).toString(),
+	mainEntity: {
+		"@type": "ItemList",
+		itemListElement: tools.map((tool, index) => ({
+			"@type": "ListItem",
+			position: index + 1,
+			name: tool.name,
+			url:
+				tool.url === "#"
+					? undefined
+					: new URL(tool.url, Astro.site || Astro.url.origin).toString(),
+		})),
+	},
+};
+---
+
+<MainGridLayout title={title} description={description} keywords={keywords}>
+	<script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(toolJsonLd)}></script>
+	<section class="card-base px-6 py-7 md:px-9 md:py-8">
+		<div class="max-w-3xl">
+			<p class="text-sm font-semibold text-[var(--primary)]">Tools</p>
+			<h1 class="mt-2 text-2xl font-bold text-90 md:text-3xl">{title}</h1>
+			<p class="mt-3 leading-7 text-75">
+				把日常开发里高频、零散的小操作集中到这里。工具优先采用浏览器本地处理，减少等待，也方便搜索引擎通过独立页面发现和收录。
+			</p>
+		</div>
+	</section>
+
+	<section class="mt-4 grid gap-4 sm:grid-cols-2">
+		{tools.map((tool) => (
+			<a
+				href={tool.url}
+				aria-disabled={tool.url === "#"}
+				class:list={[
+					"card-base group block px-5 py-5 transition hover:-translate-y-0.5 hover:shadow-lg dark:hover:shadow-none",
+					tool.url === "#" && "pointer-events-none opacity-70",
+				]}
+			>
+				<div class="flex items-start gap-4">
+					<div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--btn-regular-bg)] text-[var(--primary)]">
+						<Icon name={tool.icon} class="text-[1.45rem]" />
+					</div>
+					<div class="min-w-0">
+						<div class="flex flex-wrap items-center gap-2">
+							<h2 class="text-lg font-bold text-90">{tool.name}</h2>
+							<span class="rounded-md bg-[var(--btn-plain-bg-hover)] px-2 py-0.5 text-xs font-medium text-50">
+								{tool.status}
+							</span>
+						</div>
+						<p class="mt-2 leading-6 text-75">{tool.description}</p>
+					</div>
+				</div>
+			</a>
+		))}
+	</section>
+
+	<section class="card-base mt-4 px-6 py-6 md:px-9">
+		<h2 class="text-xl font-bold text-90">后续工具计划</h2>
+		<p class="mt-3 leading-7 text-75">
+			下一步会按独立 URL 逐个上线：时间戳转换、Base64 编码解码、Markdown 转 HTML、正则表达式测试器、图片压缩、图片转 ICO 和 PDF 转图片。每个工具都会保留标题、描述、FAQ 和站内链接，便于自然搜索覆盖长尾关键词。
+		</p>
+	</section>
+</MainGridLayout>

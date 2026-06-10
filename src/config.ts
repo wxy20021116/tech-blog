@@ -23,6 +23,8 @@ export const siteConfig: SiteConfig = {
 		"状态一致性",
 		"系统设计",
 		"工程实践",
+		"在线工具",
+		"JSON 格式化",
 	],
 	lang: "zh_CN", // Language code, e.g. 'en', 'zh_CN', 'ja', etc.
 	themeColor: {
@@ -64,6 +66,10 @@ export const navBarConfig: NavBarConfig = {
 		{
 			name: "作品集",
 			url: "/portfolio/",
+		},
+		{
+			name: "工具",
+			url: "/tools/",
 		},
 		LinkPreset.Home,
 		LinkPreset.Archive,
