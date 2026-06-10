@@ -97,10 +97,10 @@ const toolJsonLd = {
 		{tools.map((tool) => (
 			<a
 				href={tool.url}
-				aria-disabled={tool.url === "#"}
+				aria-disabled={tool.status !== "可用"}
 				class:list={[
 					"card-base group block px-5 py-5 transition hover:-translate-y-0.5 hover:shadow-lg dark:hover:shadow-none",
-					tool.url === "#" && "pointer-events-none opacity-70",
+					tool.status !== "可用" && "pointer-events-none opacity-70",
 				]}
 			>
 				<div class="flex items-start gap-4">
