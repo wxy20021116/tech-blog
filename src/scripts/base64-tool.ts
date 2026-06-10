@@ -100,7 +100,7 @@ async function copyBase64Output(tool: HTMLElement) {
 function swapBase64Content(tool: HTMLElement) {
 	const { input, output } = getBase64ToolParts(tool);
 	if (!input || !output) return;
-	if (!output.value) {
+	if (!input.value && !output.value) {
 		setBase64Status(tool, "没有可互换的结果", true);
 		return;
 	}
