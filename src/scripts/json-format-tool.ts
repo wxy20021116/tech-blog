@@ -7,6 +7,83 @@ function getJsonToolParts(tool: HTMLElement) {
 	};
 }
 
+function getLineColumnAt(source: string, index: number) {
+	const beforeIndex = source.slice(0, Math.max(0, index));
+	const lines = beforeIndex.split(/\r\n|\r|\n/);
+	return {
+		line: lines.length,
+		column: lines[lines.length - 1].length + 1,
+	};
+}
+
+function previousSignificantIndex(source: string, index: number) {
+	for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
+		if (!/\s/.test(source[cursor])) return cursor;
+	}
+	return -1;
+}
+
+function nextSignificantIndex(source: string, index: number) {
+	for (let cursor = index; cursor < source.length; cursor += 1) {
+		if (!/\s/.test(source[cursor])) return cursor;
+	}
+	return -1;
+}
+
+function readJsonStringEnd(source: string, start: number) {
+	for (let cursor = start + 1; cursor < source.length; cursor += 1) {
+		if (source[cursor] === "\\") {
+			cursor += 1;
+			continue;
+		}
+		if (source[cursor] === '"') return cursor;
+	}
+	return -1;
+}
+
+function getLikelyMissingColonMessage(source: string) {
+	const stack: string[] = [];
+
+	for (let cursor = 0; cursor < source.length; cursor += 1) {
+		const char = source[cursor];
+		if (char === '"') {
+			const stringEnd = readJsonStringEnd(source, cursor);
+			if (stringEnd === -1) break;
+
+			const previousIndex = previousSignificantIndex(source, cursor);
+			const nextIndex = nextSignificantIndex(source, stringEnd + 1);
+			const previousChar = previousIndex >= 0 ? source[previousIndex] : "";
+			const nextChar = nextIndex >= 0 ? source[nextIndex] : "";
+			const isObjectKeyPosition =
+				stack[stack.length - 1] === "{" &&
+				(previousChar === "{" || previousChar === ",");
+			const looksLikeValueWithoutColon =
+				nextChar === '"' ||
+				nextChar === "{" ||
+				nextChar === "[" ||
+				nextChar === "-" ||
+				/\d|t|f|n/.test(nextChar);
+
+			if (
+				isObjectKeyPosition &&
+				nextChar !== ":" &&
+				looksLikeValueWithoutColon
+			) {
+				const location = getLineColumnAt(source, nextIndex);
+				return `JSON 格式不正确：第 ${location.line} 行，第 ${location.column} 列前面可能少了冒号（:），请在字段名后补上冒号。`;
+			}
+
+			cursor = stringEnd;
+			continue;
+		}
+
+		if (char === "{" || char === "[") stack.push(char);
+		if (char === "}" || char === "]") stack.pop();
+	}
+
+	return null;
+}
+
 function getJsonErrorLocation(
 	error: unknown,
 	source: string,
@@ -26,16 +103,18 @@ function getJsonErrorLocation(
 	if (!positionMatch) return null;
 
 	const position = Number(positionMatch[1]);
-	const beforeError = source.slice(0, Math.max(0, position));
-	const lines = beforeError.split(/\r\n|\r|\n/);
+	const { line, column } = getLineColumnAt(source, position);
 	return {
-		line: lines.length,
-		column: lines[lines.length - 1].length + 1,
+		line,
+		column,
 		message: error.message,
 	};
 }
 
 function getJsonErrorMessage(error: unknown, source: string) {
+	const likelyMissingColonMessage = getLikelyMissingColonMessage(source);
+	if (likelyMissingColonMessage) return likelyMissingColonMessage;
+
 	const location = getJsonErrorLocation(error, source);
 	if (!location) return "JSON 格式不正确，请检查逗号、引号、括号是否完整";
 
@@ -80,8 +159,8 @@ function setJsonToolStatus(
 function formatJsonTool(tool: HTMLElement, space: number) {
 	const { input, output } = getJsonToolParts(tool);
 	if (!input || !output) return;
-	const value = input.value.trim();
-	if (!value) {
+	const value = input.value;
+	if (!value.trim()) {
 		output.value = "";
 		setJsonToolStatus(tool, "请先输入 JSON 内容", true);
 		return;
