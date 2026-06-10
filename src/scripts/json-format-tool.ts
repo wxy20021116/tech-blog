@@ -84,6 +84,38 @@ function getLikelyMissingColonMessage(source: string) {
 	return null;
 }
 
+function getLikelyMissingCommaMessage(source: string) {
+	const lines = source.split(/\r\n|\r|\n/);
+
+	for (let index = 0; index < lines.length - 1; index += 1) {
+		const currentLine = lines[index];
+		const nextLine = lines[index + 1];
+		const current = currentLine.trim();
+		const next = nextLine.trim();
+		if (!current || !next) continue;
+		if (
+			current.endsWith(",") ||
+			current.endsWith("{") ||
+			current.endsWith("[")
+		) {
+			continue;
+		}
+		if (!/^"[^"\\]*(?:\\.[^"\\]*)*"\s*:/.test(next)) continue;
+
+		const looksLikeCompletedValue =
+			current.endsWith('"') ||
+			current.endsWith("}") ||
+			current.endsWith("]") ||
+			/\b(true|false|null)$/.test(current) ||
+			/-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(current);
+		if (!looksLikeCompletedValue) continue;
+
+		return `JSON 格式不正确：第 ${index + 1} 行末尾可能少了逗号（,），请在这一行值后面补上逗号。`;
+	}
+
+	return null;
+}
+
 function getJsonErrorLocation(
 	error: unknown,
 	source: string,
@@ -112,6 +144,9 @@ function getJsonErrorLocation(
 }
 
 function getJsonErrorMessage(error: unknown, source: string) {
+	const likelyMissingCommaMessage = getLikelyMissingCommaMessage(source);
+	if (likelyMissingCommaMessage) return likelyMissingCommaMessage;
+
 	const likelyMissingColonMessage = getLikelyMissingColonMessage(source);
 	if (likelyMissingColonMessage) return likelyMissingColonMessage;
 
