@@ -101,12 +101,19 @@ const jsonLd = [
 						示例
 					</button>
 				</div>
-				<textarea
-					data-input
-					spellcheck="false"
-					placeholder='{"name":"Kris_Wen","site":"blog.hiauto.me"}'
-					class="h-[24rem] w-full resize-y rounded-lg border border-black/10 bg-[var(--page-bg)] p-4 font-mono text-sm leading-6 text-90 outline-none transition focus:border-[var(--primary)] dark:border-white/10"
-				></textarea>
+				<div class="flex h-[24rem] overflow-hidden rounded-lg border border-black/10 bg-[var(--page-bg)] transition focus-within:border-[var(--primary)] dark:border-white/10">
+					<pre
+						data-input-lines
+						aria-hidden="true"
+						class="min-w-12 select-none overflow-hidden border-r border-black/10 px-3 py-4 text-right font-mono text-sm leading-6 text-30 dark:border-white/10"
+					>1</pre>
+					<textarea
+						data-input
+						spellcheck="false"
+						placeholder='{"name":"Kris_Wen","site":"blog.hiauto.me"}'
+						class="h-full min-w-0 flex-1 resize-none bg-transparent p-4 font-mono text-sm leading-6 text-90 outline-none transition"
+					></textarea>
+				</div>
 			</section>
 
 			<section class="bg-[var(--card-bg)] p-4 md:p-5">
