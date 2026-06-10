@@ -1,0 +1,235 @@
+---
+import { Icon } from "astro-icon/components";
+import MainGridLayout from "../../layouts/MainGridLayout.astro";
+
+const title = "时间戳转换工具";
+const description =
+	"在线时间戳转换工具，支持 Unix 秒时间戳、毫秒时间戳与北京时间、本地时间、UTC 时间互转，并可快速复制结果。";
+const keywords = [
+	"时间戳转换",
+	"Unix 时间戳",
+	"毫秒时间戳",
+	"北京时间转换",
+	"时间戳在线转换",
+	"日期转时间戳",
+];
+const pageUrl = new URL(
+	"/tools/timestamp/",
+	Astro.site || Astro.url.origin,
+).toString();
+const jsonLd = [
+	{
+		"@context": "https://schema.org",
+		"@type": "WebApplication",
+		name: title,
+		description,
+		url: pageUrl,
+		applicationCategory: "DeveloperApplication",
+		operatingSystem: "Any",
+		inLanguage: "zh-CN",
+		offers: {
+			"@type": "Offer",
+			price: "0",
+			priceCurrency: "CNY",
+		},
+	},
+	{
+		"@context": "https://schema.org",
+		"@type": "FAQPage",
+		mainEntity: [
+			{
+				"@type": "Question",
+				name: "秒时间戳和毫秒时间戳有什么区别？",
+				acceptedAnswer: {
+					"@type": "Answer",
+					text: "秒时间戳通常是 10 位数字，毫秒时间戳通常是 13 位数字。毫秒时间戳比秒时间戳多保留三位毫秒精度。",
+				},
+			},
+			{
+				"@type": "Question",
+				name: "时间戳转换会上传到服务器吗？",
+				acceptedAnswer: {
+					"@type": "Answer",
+					text: "不会。当前工具在浏览器本地完成时间戳和日期时间转换。",
+				},
+			},
+		],
+	},
+	{
+		"@context": "https://schema.org",
+		"@type": "BreadcrumbList",
+		itemListElement: [
+			{
+				"@type": "ListItem",
+				position: 1,
+				name: "工具",
+				item: new URL("/tools/", Astro.site || Astro.url.origin).toString(),
+			},
+			{
+				"@type": "ListItem",
+				position: 2,
+				name: title,
+				item: pageUrl,
+			},
+		],
+	},
+];
+---
+
+<MainGridLayout title={title} description={description} keywords={keywords}>
+	<script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
+	<section class="card-base px-6 py-7 md:px-9 md:py-8">
+		<a href="/tools/" class="link-lg inline-flex items-center text-sm font-medium text-50">
+			<Icon name="material-symbols:arrow-back-rounded" class="mr-1 text-[1.2rem]" />
+			工具箱
+		</a>
+		<div class="mt-4 max-w-3xl">
+			<p class="text-sm font-semibold text-[var(--primary)]">Timestamp Converter</p>
+			<h1 class="mt-2 text-2xl font-bold text-90 md:text-3xl">{title}</h1>
+			<p class="mt-3 leading-7 text-75">
+				在线转换 Unix 秒时间戳、毫秒时间戳和日期时间。工具在浏览器本地运行，适合接口调试、日志排查和数据库时间字段核对。
+			</p>
+		</div>
+	</section>
+
+	<timestamp-tool class="card-base mt-4 block overflow-hidden">
+		<section class="border-b border-[var(--line-divider)] px-4 py-4 md:px-5">
+			<div class="flex flex-wrap items-center justify-between gap-3">
+				<div>
+					<h2 class="text-base font-bold text-90">当前时间</h2>
+					<p class="mt-1 text-sm text-50">每秒自动刷新，可直接复制秒或毫秒时间戳。</p>
+				</div>
+				<button type="button" data-action="now" class="btn-regular h-9 rounded-lg px-3 text-sm font-medium">
+					刷新当前
+				</button>
+			</div>
+			<div class="mt-4 grid gap-3 md:grid-cols-3">
+				<div class="rounded-lg bg-[var(--page-bg)] p-4">
+					<p class="text-sm text-50">秒时间戳</p>
+					<div class="mt-2 flex items-center justify-between gap-3">
+						<code data-now-seconds class="break-all font-mono text-lg font-bold text-90">--</code>
+						<button type="button" data-copy-target="now-seconds" class="btn-plain h-8 rounded-lg px-2 text-sm">复制</button>
+					</div>
+				</div>
+				<div class="rounded-lg bg-[var(--page-bg)] p-4">
+					<p class="text-sm text-50">毫秒时间戳</p>
+					<div class="mt-2 flex items-center justify-between gap-3">
+						<code data-now-milliseconds class="break-all font-mono text-lg font-bold text-90">--</code>
+						<button type="button" data-copy-target="now-milliseconds" class="btn-plain h-8 rounded-lg px-2 text-sm">复制</button>
+					</div>
+				</div>
+				<div class="rounded-lg bg-[var(--page-bg)] p-4">
+					<p class="text-sm text-50">本地时间</p>
+					<p data-now-local class="mt-2 break-words font-mono text-sm leading-6 text-90">--</p>
+				</div>
+			</div>
+		</section>
+
+		<div class="grid gap-px bg-[var(--line-divider)] lg:grid-cols-2">
+			<section class="bg-[var(--card-bg)] p-4 md:p-5">
+				<h2 class="text-base font-bold text-90">时间戳转日期</h2>
+				<p class="mt-1 text-sm text-50">支持 10 位秒时间戳和 13 位毫秒时间戳，也支持带小数的秒时间戳。</p>
+				<div class="mt-4 flex flex-col gap-3">
+					<label class="text-sm font-medium text-75" for="timestamp-input">输入时间戳</label>
+					<input
+						id="timestamp-input"
+						data-timestamp-input
+						inputmode="decimal"
+						placeholder="例如：1767225600 或 1767225600000"
+						class="h-11 rounded-lg border border-black/10 bg-[var(--page-bg)] px-3 font-mono text-sm text-90 outline-none transition focus:border-[var(--primary)] dark:border-white/10"
+					/>
+					<div class="flex flex-wrap gap-2">
+						<button type="button" data-action="timestamp-to-date" class="btn-regular h-9 rounded-lg px-3 text-sm font-medium">转换</button>
+						<button type="button" data-action="use-now-timestamp" class="btn-plain h-9 rounded-lg px-3 text-sm font-medium">填入当前</button>
+						<button type="button" data-action="clear-timestamp" class="btn-plain h-9 rounded-lg px-3 text-sm font-medium">清空</button>
+					</div>
+				</div>
+				<div class="mt-4 grid gap-3">
+					<div class="rounded-lg bg-[var(--page-bg)] p-4">
+						<p class="text-sm text-50">北京时间</p>
+						<p data-result-beijing class="mt-2 break-words font-mono text-sm leading-6 text-90">--</p>
+					</div>
+					<div class="rounded-lg bg-[var(--page-bg)] p-4">
+						<p class="text-sm text-50">本地时间</p>
+						<p data-result-local class="mt-2 break-words font-mono text-sm leading-6 text-90">--</p>
+					</div>
+					<div class="rounded-lg bg-[var(--page-bg)] p-4">
+						<p class="text-sm text-50">UTC / ISO</p>
+						<p data-result-utc class="mt-2 break-words font-mono text-sm leading-6 text-90">--</p>
+					</div>
+				</div>
+			</section>
+
+			<section class="bg-[var(--card-bg)] p-4 md:p-5">
+				<h2 class="text-base font-bold text-90">日期转时间戳</h2>
+				<p class="mt-1 text-sm text-50">选择日期时间后，可得到对应的秒时间戳和毫秒时间戳。</p>
+				<div class="mt-4 flex flex-col gap-3">
+					<label class="text-sm font-medium text-75" for="datetime-input">输入日期时间</label>
+					<input
+						id="datetime-input"
+						data-datetime-input
+						type="datetime-local"
+						step="1"
+						class="h-11 rounded-lg border border-black/10 bg-[var(--page-bg)] px-3 font-mono text-sm text-90 outline-none transition focus:border-[var(--primary)] dark:border-white/10"
+					/>
+					<div class="flex flex-wrap gap-2">
+						<button type="button" data-action="date-to-timestamp" class="btn-regular h-9 rounded-lg px-3 text-sm font-medium">转换</button>
+						<button type="button" data-action="use-now-date" class="btn-plain h-9 rounded-lg px-3 text-sm font-medium">填入当前</button>
+						<button type="button" data-action="clear-date" class="btn-plain h-9 rounded-lg px-3 text-sm font-medium">清空</button>
+					</div>
+				</div>
+				<div class="mt-4 grid gap-3">
+					<div class="rounded-lg bg-[var(--page-bg)] p-4">
+						<p class="text-sm text-50">秒时间戳</p>
+						<div class="mt-2 flex items-center justify-between gap-3">
+							<code data-result-seconds class="break-all font-mono text-lg font-bold text-90">--</code>
+							<button type="button" data-copy-target="result-seconds" class="btn-plain h-8 rounded-lg px-2 text-sm">复制</button>
+						</div>
+					</div>
+					<div class="rounded-lg bg-[var(--page-bg)] p-4">
+						<p class="text-sm text-50">毫秒时间戳</p>
+						<div class="mt-2 flex items-center justify-between gap-3">
+							<code data-result-milliseconds class="break-all font-mono text-lg font-bold text-90">--</code>
+							<button type="button" data-copy-target="result-milliseconds" class="btn-plain h-8 rounded-lg px-2 text-sm">复制</button>
+						</div>
+					</div>
+					<div class="rounded-lg bg-[var(--page-bg)] p-4">
+						<p class="text-sm text-50">ISO 时间</p>
+						<p data-result-date-iso class="mt-2 break-words font-mono text-sm leading-6 text-90">--</p>
+					</div>
+				</div>
+			</section>
+		</div>
+		<div class="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line-divider)] px-4 py-3 md:px-5">
+			<p data-status class="text-sm text-50">等待输入时间戳或日期时间</p>
+			<p class="text-sm text-50">本地处理，不上传服务器</p>
+		</div>
+	</timestamp-tool>
+
+	<section class="card-base mt-4 px-6 py-6 md:px-9">
+		<h2 class="text-xl font-bold text-90">常见问题</h2>
+		<div class="mt-4 grid gap-4 md:grid-cols-2">
+			<div>
+				<h3 class="font-bold text-90">10 位和 13 位时间戳怎么区分？</h3>
+				<p class="mt-2 leading-7 text-75">
+					常见 10 位是秒时间戳，13 位是毫秒时间戳。本工具会根据位数自动识别，也支持带小数的秒时间戳。
+				</p>
+			</div>
+			<div>
+				<h3 class="font-bold text-90">为什么同一个时间戳显示不同时间？</h3>
+				<p class="mt-2 leading-7 text-75">
+					时间戳本身表示同一个绝对时刻，不同时区展示的日期时间会不同。页面同时展示北京时间、本地时间和 UTC，方便对照。
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="card-base mt-4 px-6 py-6 md:px-9">
+		<h2 class="text-xl font-bold text-90">相关工具</h2>
+		<div class="mt-3 flex flex-wrap gap-2">
+			<a href="/tools/" class="btn-regular rounded-lg px-3 py-2 text-sm font-medium">在线工具箱</a>
+			<a href="/tools/json-format/" class="btn-regular rounded-lg px-3 py-2 text-sm font-medium">JSON 格式化</a>
+			<span class="rounded-lg bg-[var(--btn-plain-bg-hover)] px-3 py-2 text-sm text-50">Base64 编码解码</span>
+		</div>
+	</section>
+</MainGridLayout>
