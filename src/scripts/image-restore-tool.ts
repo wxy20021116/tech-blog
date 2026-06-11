@@ -105,7 +105,7 @@ function runRestoreInWorker(
 			worker.removeEventListener("message", handleMessage);
 			worker.removeEventListener("error", handleError);
 			worker.removeEventListener("messageerror", handleMessageError);
-			reject(new Error("图片还原超时，请缩小涂抹区域或换一张较小的图片"));
+			reject(new Error("图片还原超时，请清除涂抹后只覆盖需要处理的区域"));
 		}, 60000);
 
 		const handleMessage = (event: MessageEvent<WorkerRestoreResult>) => {
@@ -224,7 +224,9 @@ function drawMaskPoint(
 	const parts = getRestoreParts(tool);
 	const state = restoreState.get(tool);
 	if (!state || !parts.maskCanvas || !parts.brush) return;
-	const context = parts.maskCanvas.getContext("2d");
+	const context = parts.maskCanvas.getContext("2d", {
+		willReadFrequently: true,
+	});
 	if (!context) return;
 
 	const point = getCanvasPoint(parts.maskCanvas, event);
@@ -285,8 +287,12 @@ async function selectRestoreImage(tool: HTMLElement, file: File) {
 		canvas.height = height;
 	}
 
-	const originalContext = parts.originalCanvas.getContext("2d");
-	const maskContext = parts.maskCanvas.getContext("2d");
+	const originalContext = parts.originalCanvas.getContext("2d", {
+		willReadFrequently: true,
+	});
+	const maskContext = parts.maskCanvas.getContext("2d", {
+		willReadFrequently: true,
+	});
 	const outputContext = parts.outputCanvas.getContext("2d");
 	if (!originalContext || !maskContext || !outputContext) {
 		setRestoreStatus(tool, "当前浏览器不支持 Canvas", true);
@@ -330,7 +336,9 @@ function clearMask(tool: HTMLElement) {
 	const parts = getRestoreParts(tool);
 	const state = restoreState.get(tool);
 	if (!parts.maskCanvas || !state) return;
-	const context = parts.maskCanvas.getContext("2d");
+	const context = parts.maskCanvas.getContext("2d", {
+		willReadFrequently: true,
+	});
 	context?.clearRect(0, 0, parts.maskCanvas.width, parts.maskCanvas.height);
 	state.hasMask = false;
 	resetDownload(tool);
@@ -352,7 +360,9 @@ function clearRestoreTool(tool: HTMLElement) {
 		parts.maskCanvas,
 		parts.outputCanvas,
 	]) {
-		const context = canvas?.getContext("2d");
+		const context = canvas?.getContext("2d", {
+			willReadFrequently: true,
+		});
 		if (canvas && context) context.clearRect(0, 0, canvas.width, canvas.height);
 		canvas?.classList.add("hidden");
 	}
@@ -391,8 +401,12 @@ async function restoreImage(tool: HTMLElement) {
 	try {
 		state.isRestoring = true;
 		setRestoreStatus(tool, "正在后台还原图片，页面可以继续操作...");
-		const originalContext = parts.originalCanvas.getContext("2d");
-		const maskContext = parts.maskCanvas.getContext("2d");
+		const originalContext = parts.originalCanvas.getContext("2d", {
+			willReadFrequently: true,
+		});
+		const maskContext = parts.maskCanvas.getContext("2d", {
+			willReadFrequently: true,
+		});
 		const outputContext = parts.outputCanvas.getContext("2d");
 		if (!originalContext || !maskContext || !outputContext) {
 			throw new Error("当前浏览器不支持 Canvas");
