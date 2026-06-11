@@ -7,6 +7,11 @@ type DiffPart = {
 	rightLine?: number;
 };
 
+type SideBySideDiffRow = {
+	left?: DiffPart;
+	right?: DiffPart;
+};
+
 function getTextDiffParts(tool: HTMLElement) {
 	return {
 		leftFile: tool.querySelector<HTMLInputElement>("[data-left-file]"),
@@ -163,38 +168,99 @@ function backtrackMyersDiff(
 	return parts.reverse();
 }
 
-function createDiffLine(part: DiffPart) {
-	const row = document.createElement("div");
-	const lineClass =
-		part.type === "insert"
-			? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-			: part.type === "delete"
-				? "bg-red-500/10 text-red-700 dark:text-red-300"
-				: "text-75";
-	row.className = `grid grid-cols-[3rem_3rem_2rem_minmax(0,1fr)] border-b border-black/5 font-mono text-sm leading-6 dark:border-white/5 ${lineClass}`;
+function toSideBySideRows(parts: DiffPart[]) {
+	const rows: SideBySideDiffRow[] = [];
 
-	const leftNo = document.createElement("span");
-	leftNo.className =
-		"select-none border-r border-black/5 px-2 py-1 text-right text-30 dark:border-white/5";
-	leftNo.textContent = part.leftLine ? String(part.leftLine) : "";
+	for (let index = 0; index < parts.length; index += 1) {
+		const part = parts[index];
+		if (part.type === "equal") {
+			rows.push({ left: part, right: part });
+			continue;
+		}
 
-	const rightNo = document.createElement("span");
-	rightNo.className =
+		const deletes: DiffPart[] = [];
+		const inserts: DiffPart[] = [];
+		while (index < parts.length && parts[index].type !== "equal") {
+			const changedPart = parts[index];
+			if (changedPart.type === "delete") deletes.push(changedPart);
+			if (changedPart.type === "insert") inserts.push(changedPart);
+			index += 1;
+		}
+		index -= 1;
+
+		const rowCount = Math.max(deletes.length, inserts.length);
+		for (let rowIndex = 0; rowIndex < rowCount; rowIndex += 1) {
+			rows.push({
+				left: deletes[rowIndex],
+				right: inserts[rowIndex],
+			});
+		}
+	}
+
+	return rows;
+}
+
+function createDiffCell(part: DiffPart | undefined, side: "left" | "right") {
+	const cell = document.createElement("div");
+	const tone =
+		part?.type === "delete"
+			? "bg-red-500/10 text-red-700 dark:text-red-300"
+			: part?.type === "insert"
+				? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+				: part
+					? "text-75"
+					: "bg-black/[0.02] text-30 dark:bg-white/[0.03]";
+	cell.className = `grid min-w-0 grid-cols-[3.5rem_2rem_minmax(0,1fr)] font-mono text-sm leading-6 ${tone}`;
+
+	const lineNo = document.createElement("span");
+	lineNo.className =
 		"select-none border-r border-black/5 px-2 py-1 text-right text-30 dark:border-white/5";
-	rightNo.textContent = part.rightLine ? String(part.rightLine) : "";
+	lineNo.textContent = part
+		? String(side === "left" ? part.leftLine || "" : part.rightLine || "")
+		: "";
 
 	const marker = document.createElement("span");
 	marker.className =
 		"select-none border-r border-black/5 px-2 py-1 text-center font-bold dark:border-white/5";
 	marker.textContent =
-		part.type === "insert" ? "+" : part.type === "delete" ? "-" : " ";
+		part?.type === "delete" ? "-" : part?.type === "insert" ? "+" : " ";
 
 	const content = document.createElement("span");
 	content.className = "min-w-0 whitespace-pre-wrap break-words px-3 py-1";
-	content.textContent = part.text || " ";
+	content.textContent = part?.text || " ";
 
-	row.append(leftNo, rightNo, marker, content);
+	cell.append(lineNo, marker, content);
+	return cell;
+}
+
+function createSideBySideDiffRow(rowData: SideBySideDiffRow) {
+	const row = document.createElement("div");
+	row.className =
+		"grid min-w-[48rem] grid-cols-2 border-b border-black/5 dark:border-white/5";
+	row.append(
+		createDiffCell(rowData.left, "left"),
+		createDiffCell(rowData.right, "right"),
+	);
 	return row;
+}
+
+function createSideBySideDiffHeader() {
+	const header = document.createElement("div");
+	header.className =
+		"sticky top-0 z-10 grid min-w-[48rem] grid-cols-2 border-b border-black/10 bg-[var(--card-bg)] text-sm font-bold text-75 dark:border-white/10";
+	header.innerHTML = `
+		<div class="grid grid-cols-[3.5rem_2rem_minmax(0,1fr)] border-r border-black/10 dark:border-white/10">
+			<span class="px-2 py-2 text-right text-50">行</span>
+			<span class="px-2 py-2 text-center text-50">-</span>
+			<span class="px-3 py-2">原始内容</span>
+		</div>
+		<div class="grid grid-cols-[3.5rem_2rem_minmax(0,1fr)]">
+			<span class="px-2 py-2 text-right text-50">行</span>
+			<span class="px-2 py-2 text-center text-50">+</span>
+			<span class="px-3 py-2">新内容</span>
+		</div>
+	`;
+	return header;
 }
 
 function renderDiff(tool: HTMLElement) {
@@ -217,7 +283,11 @@ function renderDiff(tool: HTMLElement) {
 	const additions = parts.filter((part) => part.type === "insert").length;
 	const deletions = parts.filter((part) => part.type === "delete").length;
 
-	diffOutput.replaceChildren(...parts.map(createDiffLine));
+	const rows = toSideBySideRows(parts);
+	diffOutput.replaceChildren(
+		createSideBySideDiffHeader(),
+		...rows.map(createSideBySideDiffRow),
+	);
 	if (parts.length === 0) {
 		diffOutput.innerHTML =
 			'<p class="p-4 text-sm text-50">两个文件都是空内容，没有差异。</p>';
@@ -279,7 +349,7 @@ function clearTextDiffTool(tool: HTMLElement) {
 	if (parts.summary) parts.summary.textContent = "等待对比";
 	if (parts.diffOutput) {
 		parts.diffOutput.innerHTML =
-			'<p class="p-4 text-sm text-50">对比结果会显示在这里，绿色为新增，红色为删除。</p>';
+			'<p class="p-4 text-sm text-50">对比结果会显示在这里，左侧为原始内容，右侧为新内容。</p>';
 	}
 	setTextDiffStatus(tool, "已清空");
 }
