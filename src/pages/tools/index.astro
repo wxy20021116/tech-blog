@@ -4,7 +4,7 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 
 const title = "在线工具箱";
 const description =
-	"Kris_Wen 在线工具箱，提供 JSON 格式化、时间戳转换、Base64 编码解码、Markdown 转 HTML、正则测试、图片压缩等开发常用工具。";
+	"Kris_Wen 在线工具箱，提供 JSON 格式化、时间戳转换、Base64 编码解码、Markdown 转 HTML、文本对比、正则测试、图片压缩等开发常用工具。";
 const keywords = [
 	"在线工具",
 	"开发者工具",
@@ -12,6 +12,8 @@ const keywords = [
 	"时间戳转换",
 	"Base64 编码解码",
 	"Markdown 转 HTML",
+	"文本对比",
+	"Git Diff",
 	"正则表达式测试",
 	"图片压缩",
 	"PDF 转图片",
@@ -43,6 +45,13 @@ const tools = [
 		description: "将 Markdown 内容转换为 HTML 片段。",
 		url: "/tools/markdown-to-html/",
 		icon: "material-symbols:markdown-rounded",
+		status: "可用",
+	},
+	{
+		name: "文本对比工具",
+		description: "选择两个文本文件，用 Git 风格 diff 标出新增和删除行。",
+		url: "/tools/text-diff/",
+		icon: "material-symbols:difference-rounded",
 		status: "可用",
 	},
 	{
@@ -124,7 +133,7 @@ const toolJsonLd = {
 	<section class="card-base mt-4 px-6 py-6 md:px-9">
 		<h2 class="text-xl font-bold text-90">后续工具计划</h2>
 		<p class="mt-3 leading-7 text-75">
-			下一步会按独立 URL 逐个上线：时间戳转换、Base64 编码解码、Markdown 转 HTML、正则表达式测试器、图片压缩、图片转 ICO 和 PDF 转图片。每个工具都会保留标题、描述、FAQ 和站内链接，便于自然搜索覆盖长尾关键词。
+			下一步会按独立 URL 逐个上线：图片转 ICO、PDF 转图片、二维码生成和常用编码转换。每个工具都会保留标题、描述、FAQ 和站内链接，便于自然搜索覆盖长尾关键词。
 		</p>
 	</section>
 </MainGridLayout>

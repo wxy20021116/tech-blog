@@ -1,0 +1,196 @@
+---
+import { Icon } from "astro-icon/components";
+import MainGridLayout from "../../layouts/MainGridLayout.astro";
+
+const title = "文本对比工具";
+const description =
+	"在线文本文件对比工具，支持选择两个文本文件并在浏览器本地读取内容，使用 Git 风格的 Myers diff 算法标出新增和删除行。";
+const keywords = [
+	"文本对比",
+	"文件对比",
+	"Diff 工具",
+	"Git Diff",
+	"在线文本对比",
+	"代码对比",
+	"文本差异",
+];
+const pageUrl = new URL(
+	"/tools/text-diff/",
+	Astro.site || Astro.url.origin,
+).toString();
+const jsonLd = [
+	{
+		"@context": "https://schema.org",
+		"@type": "WebApplication",
+		name: title,
+		description,
+		url: pageUrl,
+		applicationCategory: "DeveloperApplication",
+		operatingSystem: "Any",
+		inLanguage: "zh-CN",
+		offers: {
+			"@type": "Offer",
+			price: "0",
+			priceCurrency: "CNY",
+		},
+	},
+	{
+		"@context": "https://schema.org",
+		"@type": "FAQPage",
+		mainEntity: [
+			{
+				"@type": "Question",
+				name: "文本对比会上传文件吗？",
+				acceptedAnswer: {
+					"@type": "Answer",
+					text: "不会。当前工具使用浏览器 File API 在本地读取文本文件，并在本地完成差异计算。",
+				},
+			},
+			{
+				"@type": "Question",
+				name: "这个工具使用什么对比算法？",
+				acceptedAnswer: {
+					"@type": "Answer",
+					text: "工具使用 Myers 最短编辑路径算法做行级对比，这是 Git 默认 diff 思路中的核心算法之一。",
+				},
+			},
+		],
+	},
+	{
+		"@context": "https://schema.org",
+		"@type": "BreadcrumbList",
+		itemListElement: [
+			{
+				"@type": "ListItem",
+				position: 1,
+				name: "工具",
+				item: new URL("/tools/", Astro.site || Astro.url.origin).toString(),
+			},
+			{
+				"@type": "ListItem",
+				position: 2,
+				name: title,
+				item: pageUrl,
+			},
+		],
+	},
+];
+---
+
+<MainGridLayout title={title} description={description} keywords={keywords}>
+	<script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
+	<section class="card-base px-6 py-7 md:px-9 md:py-8">
+		<a href="/tools/" class="link-lg inline-flex items-center text-sm font-medium text-50">
+			<Icon name="material-symbols:arrow-back-rounded" class="mr-1 text-[1.2rem]" />
+			工具箱
+		</a>
+		<div class="mt-4 max-w-3xl">
+			<p class="text-sm font-semibold text-[var(--primary)]">Text Diff</p>
+			<h1 class="mt-2 text-2xl font-bold text-90 md:text-3xl">{title}</h1>
+			<p class="mt-3 leading-7 text-75">
+				选择两个文本文件，工具会在浏览器本地读取内容，并用 Git 风格的行级 diff 标出哪里新增、哪里删除。适合对比配置、日志、代码片段和导出的文本内容。
+			</p>
+		</div>
+	</section>
+
+	<text-diff-tool class="card-base mt-4 block overflow-hidden">
+		<section class="border-b border-[var(--line-divider)] p-4 md:p-5">
+			<div class="grid gap-4 lg:grid-cols-2">
+				<label class="grid gap-3 rounded-lg border border-dashed border-black/15 bg-[var(--page-bg)] p-4 transition hover:border-[var(--primary)] dark:border-white/15">
+					<span class="flex items-center gap-2 font-bold text-90">
+						<Icon name="material-symbols:file-open-rounded" class="text-[1.35rem] text-[var(--primary)]" />
+						原始文本文件
+					</span>
+					<span data-left-name class="truncate text-sm text-50">未选择文件</span>
+					<input data-left-file type="file" accept=".txt,.md,.json,.csv,.log,.xml,.yaml,.yml,.ts,.tsx,.js,.jsx,.css,.html,text/*" class="text-sm text-75 file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--btn-regular-bg)] file:px-3 file:py-2 file:text-sm file:font-medium file:text-90" />
+					<span data-left-meta class="text-xs text-50">0 行，0 B</span>
+				</label>
+
+				<label class="grid gap-3 rounded-lg border border-dashed border-black/15 bg-[var(--page-bg)] p-4 transition hover:border-[var(--primary)] dark:border-white/15">
+					<span class="flex items-center gap-2 font-bold text-90">
+						<Icon name="material-symbols:file-open-rounded" class="text-[1.35rem] text-[var(--primary)]" />
+						新文本文件
+					</span>
+					<span data-right-name class="truncate text-sm text-50">未选择文件</span>
+					<input data-right-file type="file" accept=".txt,.md,.json,.csv,.log,.xml,.yaml,.yml,.ts,.tsx,.js,.jsx,.css,.html,text/*" class="text-sm text-75 file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--btn-regular-bg)] file:px-3 file:py-2 file:text-sm file:font-medium file:text-90" />
+					<span data-right-meta class="text-xs text-50">0 行，0 B</span>
+				</label>
+			</div>
+
+			<div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+				<p data-summary class="text-sm font-medium text-75">等待对比</p>
+				<div class="flex flex-wrap gap-2">
+					<button type="button" data-action="sample" class="btn-regular h-9 rounded-lg px-3 text-sm font-medium">示例</button>
+					<button type="button" data-action="compare" class="btn-regular h-9 rounded-lg px-3 text-sm font-medium">开始对比</button>
+					<button type="button" data-action="clear" class="btn-plain h-9 rounded-lg px-3 text-sm font-medium">清空</button>
+				</div>
+			</div>
+		</section>
+
+		<div class="grid gap-px bg-[var(--line-divider)] lg:grid-cols-2">
+			<section class="bg-[var(--card-bg)] p-4 md:p-5">
+				<h2 class="mb-3 text-base font-bold text-90">原始内容</h2>
+				<textarea
+					data-left-text
+					spellcheck="false"
+					wrap="off"
+					placeholder="选择左侧文件后会自动读取内容，也可以直接粘贴文本。"
+					class="h-[22rem] w-full resize-y rounded-lg border border-black/10 bg-[var(--page-bg)] p-4 font-mono text-sm leading-6 text-90 outline-none transition focus:border-[var(--primary)] dark:border-white/10"
+				></textarea>
+			</section>
+
+			<section class="bg-[var(--card-bg)] p-4 md:p-5">
+				<h2 class="mb-3 text-base font-bold text-90">新内容</h2>
+				<textarea
+					data-right-text
+					spellcheck="false"
+					wrap="off"
+					placeholder="选择右侧文件后会自动读取内容，也可以直接粘贴文本。"
+					class="h-[22rem] w-full resize-y rounded-lg border border-black/10 bg-[var(--page-bg)] p-4 font-mono text-sm leading-6 text-90 outline-none transition focus:border-[var(--primary)] dark:border-white/10"
+				></textarea>
+			</section>
+		</div>
+
+		<section class="border-t border-[var(--line-divider)] bg-[var(--card-bg)] p-4 md:p-5">
+			<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+				<h2 class="text-base font-bold text-90">差异结果</h2>
+				<p class="text-sm text-50">左侧行号 / 右侧行号 / 变更标记</p>
+			</div>
+			<div data-diff-output class="max-h-[34rem] overflow-auto rounded-lg border border-black/10 bg-[var(--page-bg)] dark:border-white/10">
+				<p class="p-4 text-sm text-50">对比结果会显示在这里，绿色为新增，红色为删除。</p>
+			</div>
+		</section>
+
+		<div class="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line-divider)] px-4 py-3 md:px-5">
+			<p data-status class="text-sm text-50">等待选择文件</p>
+			<p class="text-sm text-50">本地读取和对比，不上传服务器</p>
+		</div>
+	</text-diff-tool>
+
+	<section class="card-base mt-4 px-6 py-6 md:px-9">
+		<h2 class="text-xl font-bold text-90">常见问题</h2>
+		<div class="mt-4 grid gap-4 md:grid-cols-2">
+			<div>
+				<h3 class="font-bold text-90">为什么按行对比？</h3>
+				<p class="mt-2 leading-7 text-75">
+					代码、配置和日志通常以行为单位阅读。行级 diff 可以更清楚地看到哪些行新增、哪些行删除，和 Git 日常查看差异的方式更接近。
+				</p>
+			</div>
+			<div>
+				<h3 class="font-bold text-90">支持哪些文本文件？</h3>
+				<p class="mt-2 leading-7 text-75">
+					支持浏览器能读取的文本文件，例如 TXT、Markdown、JSON、CSV、日志、XML、YAML、代码文件等。二进制文件不适合用这个工具对比。
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="card-base mt-4 px-6 py-6 md:px-9">
+		<h2 class="text-xl font-bold text-90">相关工具</h2>
+		<div class="mt-3 flex flex-wrap gap-2">
+			<a href="/tools/" class="btn-regular rounded-lg px-3 py-2 text-sm font-medium">在线工具箱</a>
+			<a href="/tools/json-format/" class="btn-regular rounded-lg px-3 py-2 text-sm font-medium">JSON 格式化</a>
+			<a href="/tools/markdown-to-html/" class="btn-regular rounded-lg px-3 py-2 text-sm font-medium">Markdown 转 HTML</a>
+		</div>
+	</section>
+</MainGridLayout>
