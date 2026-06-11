@@ -93,11 +93,19 @@ function runRestoreInWorker(
 	return new Promise<ImageData>((resolve, reject) => {
 		const worker = getRestoreWorker();
 		const id = ++restoreRequestId;
+		const timer = window.setTimeout(() => {
+			worker.removeEventListener("message", handleMessage);
+			worker.removeEventListener("error", handleError);
+			worker.removeEventListener("messageerror", handleMessageError);
+			reject(new Error("图片还原超时，请缩小涂抹区域或换一张较小的图片"));
+		}, 60000);
 
 		const handleMessage = (event: MessageEvent<WorkerRestoreResult>) => {
 			if (event.data.id !== id) return;
+			window.clearTimeout(timer);
 			worker.removeEventListener("message", handleMessage);
 			worker.removeEventListener("error", handleError);
+			worker.removeEventListener("messageerror", handleMessageError);
 			if (event.data.error) {
 				reject(new Error(event.data.error));
 				return;
@@ -110,13 +118,24 @@ function runRestoreInWorker(
 		};
 
 		const handleError = () => {
+			window.clearTimeout(timer);
 			worker.removeEventListener("message", handleMessage);
 			worker.removeEventListener("error", handleError);
+			worker.removeEventListener("messageerror", handleMessageError);
 			reject(new Error("图片还原引擎运行失败"));
+		};
+
+		const handleMessageError = () => {
+			window.clearTimeout(timer);
+			worker.removeEventListener("message", handleMessage);
+			worker.removeEventListener("error", handleError);
+			worker.removeEventListener("messageerror", handleMessageError);
+			reject(new Error("图片数据传递失败，请刷新页面后重试"));
 		};
 
 		worker.addEventListener("message", handleMessage);
 		worker.addEventListener("error", handleError);
+		worker.addEventListener("messageerror", handleMessageError);
 		worker.postMessage({ id, imageData, maskData, radius, algorithm }, [
 			imageData.data.buffer,
 			maskData.data.buffer,
@@ -448,9 +467,7 @@ document.addEventListener("pointerup", (event) => {
 document.addEventListener("click", (event) => {
 	const target = event.target;
 	if (!(target instanceof Element)) return;
-	const actionButton = target.closest<HTMLElement>(
-		"image-restore-tool [data-action]",
-	);
+	const actionButton = target.closest<HTMLElement>("[data-action]");
 	const tool = actionButton?.closest<HTMLElement>("image-restore-tool");
 	const action = actionButton?.dataset.action;
 	if (!tool || !action) return;
