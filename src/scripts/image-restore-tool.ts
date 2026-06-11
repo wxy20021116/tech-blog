@@ -20,6 +20,14 @@ type WorkerRestoreResult = {
 	error?: string;
 };
 
+type MaskBounds = {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	pixels: number;
+};
+
 function getRestoreParts(tool: HTMLElement) {
 	return {
 		fileInput: tool.querySelector<HTMLInputElement>("[data-file]"),
@@ -141,6 +149,44 @@ function runRestoreInWorker(
 			maskData.data.buffer,
 		]);
 	});
+}
+
+function getMaskBounds(
+	maskData: ImageData,
+	padding: number,
+): MaskBounds | null {
+	let minX = maskData.width;
+	let minY = maskData.height;
+	let maxX = -1;
+	let maxY = -1;
+	let pixels = 0;
+
+	for (let y = 0; y < maskData.height; y++) {
+		for (let x = 0; x < maskData.width; x++) {
+			const index = (y * maskData.width + x) * 4;
+			if (maskData.data[index + 3] === 0) continue;
+			minX = Math.min(minX, x);
+			minY = Math.min(minY, y);
+			maxX = Math.max(maxX, x);
+			maxY = Math.max(maxY, y);
+			pixels++;
+		}
+	}
+
+	if (maxX < minX || maxY < minY) return null;
+
+	const x = Math.max(0, minX - padding);
+	const y = Math.max(0, minY - padding);
+	const right = Math.min(maskData.width, maxX + padding + 1);
+	const bottom = Math.min(maskData.height, maxY + padding + 1);
+
+	return {
+		x,
+		y,
+		width: right - x,
+		height: bottom - y,
+		pixels,
+	};
 }
 
 function canvasToBlob(canvas: HTMLCanvasElement) {
@@ -352,25 +398,50 @@ async function restoreImage(tool: HTMLElement) {
 			throw new Error("当前浏览器不支持 Canvas");
 		}
 
-		const imageData = originalContext.getImageData(
-			0,
-			0,
-			parts.originalCanvas.width,
-			parts.originalCanvas.height,
-		);
-		const maskData = maskContext.getImageData(
+		const fullMaskData = maskContext.getImageData(
 			0,
 			0,
 			parts.maskCanvas.width,
 			parts.maskCanvas.height,
 		);
+		const radius = Number(parts.radius?.value || 3);
+		const brushSize = Number(parts.brush?.value || 28);
+		const padding = Math.max(48, Math.ceil(brushSize * 1.5 + radius * 8));
+		const maskBounds = getMaskBounds(fullMaskData, padding);
+		if (!maskBounds) {
+			throw new Error("请先涂抹需要还原的区域");
+		}
+
+		const imageData = originalContext.getImageData(
+			maskBounds.x,
+			maskBounds.y,
+			maskBounds.width,
+			maskBounds.height,
+		);
+		const maskData = maskContext.getImageData(
+			maskBounds.x,
+			maskBounds.y,
+			maskBounds.width,
+			maskBounds.height,
+		);
+		setRestoreStatus(
+			tool,
+			`正在后台还原局部区域 ${maskBounds.width} x ${maskBounds.height}，页面可以继续操作...`,
+		);
 		const outputData = await runRestoreInWorker(
 			imageData,
 			maskData,
-			Number(parts.radius?.value || 3),
+			radius,
 			parts.algorithm?.value || "telea",
 		);
-		outputContext.putImageData(outputData, 0, 0);
+		outputContext.clearRect(
+			0,
+			0,
+			parts.outputCanvas.width,
+			parts.outputCanvas.height,
+		);
+		outputContext.drawImage(parts.originalCanvas, 0, 0);
+		outputContext.putImageData(outputData, maskBounds.x, maskBounds.y);
 
 		parts.outputCanvas.classList.remove("hidden");
 		parts.outputEmpty?.classList.add("hidden");
