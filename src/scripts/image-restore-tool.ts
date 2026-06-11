@@ -119,8 +119,7 @@ function loadOpenCv() {
 		}
 
 		const script = document.createElement("script");
-		script.src =
-			"https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.10.0-release.1/dist/opencv.js";
+		script.src = "/vendor/opencv.js";
 		script.async = true;
 		script.dataset.opencvLoader = "true";
 		script.onload = waitForRuntime;
