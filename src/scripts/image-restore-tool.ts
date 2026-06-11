@@ -1,29 +1,3 @@
-type CvMat = {
-	delete: () => void;
-};
-
-type CvApi = {
-	Mat: {
-		zeros: (rows: number, cols: number, type: number) => CvMat;
-	};
-	CV_8UC1: number;
-	COLOR_RGBA2RGB: number;
-	COLOR_RGBA2GRAY: number;
-	INPAINT_TELEA: number;
-	INPAINT_NS: number;
-	imread: (source: HTMLCanvasElement) => CvMat;
-	imshow: (target: HTMLCanvasElement, mat: CvMat) => void;
-	cvtColor: (source: CvMat, target: CvMat, code: number) => void;
-	inpaint: (
-		source: CvMat,
-		mask: CvMat,
-		target: CvMat,
-		radius: number,
-		flags: number,
-	) => void;
-	onRuntimeInitialized?: () => void;
-};
-
 type RestoreState = {
 	file?: File;
 	fileName?: string;
@@ -33,16 +7,18 @@ type RestoreState = {
 	isDrawing: boolean;
 	hasMask: boolean;
 	scale: number;
+	isRestoring?: boolean;
 };
 
-declare global {
-	interface Window {
-		cv?: CvApi;
-	}
-}
-
 const restoreState = new WeakMap<HTMLElement, RestoreState>();
-let opencvPromise: Promise<CvApi> | undefined;
+let restoreWorker: Worker | undefined;
+let restoreRequestId = 0;
+
+type WorkerRestoreResult = {
+	id: number;
+	imageData?: ImageData;
+	error?: string;
+};
 
 function getRestoreParts(tool: HTMLElement) {
 	return {
@@ -87,50 +63,6 @@ function formatBytes(bytes: number) {
 	return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 }
 
-function loadOpenCv() {
-	if (window.cv?.Mat) return Promise.resolve(window.cv);
-	if (opencvPromise) return opencvPromise;
-
-	opencvPromise = new Promise<CvApi>((resolve, reject) => {
-		const waitForRuntime = () => {
-			const startedAt = Date.now();
-			const timer = window.setInterval(() => {
-				if (window.cv?.Mat && window.cv.inpaint) {
-					window.clearInterval(timer);
-					resolve(window.cv);
-					return;
-				}
-				if (Date.now() - startedAt > 15000) {
-					window.clearInterval(timer);
-					reject(new Error("OpenCV 初始化超时，请刷新页面后重试"));
-				}
-			}, 80);
-		};
-		const existingScript = document.querySelector<HTMLScriptElement>(
-			'script[data-opencv-loader="true"]',
-		);
-
-		if (existingScript) {
-			waitForRuntime();
-			existingScript.addEventListener("error", () =>
-				reject(new Error("OpenCV 加载失败，请检查网络后重试")),
-			);
-			return;
-		}
-
-		const script = document.createElement("script");
-		script.src = "/vendor/opencv.js";
-		script.async = true;
-		script.dataset.opencvLoader = "true";
-		script.onload = waitForRuntime;
-		script.onerror = () =>
-			reject(new Error("OpenCV 加载失败，请检查网络后重试"));
-		document.head.appendChild(script);
-	});
-
-	return opencvPromise;
-}
-
 function loadImage(file: File) {
 	return new Promise<HTMLImageElement>((resolve, reject) => {
 		const image = new Image();
@@ -144,6 +76,51 @@ function loadImage(file: File) {
 			reject(new Error("图片读取失败"));
 		};
 		image.src = url;
+	});
+}
+
+function getRestoreWorker() {
+	restoreWorker ??= new Worker("/vendor/image-restore-worker.js");
+	return restoreWorker;
+}
+
+function runRestoreInWorker(
+	imageData: ImageData,
+	maskData: ImageData,
+	radius: number,
+	algorithm: string,
+) {
+	return new Promise<ImageData>((resolve, reject) => {
+		const worker = getRestoreWorker();
+		const id = ++restoreRequestId;
+
+		const handleMessage = (event: MessageEvent<WorkerRestoreResult>) => {
+			if (event.data.id !== id) return;
+			worker.removeEventListener("message", handleMessage);
+			worker.removeEventListener("error", handleError);
+			if (event.data.error) {
+				reject(new Error(event.data.error));
+				return;
+			}
+			if (!event.data.imageData) {
+				reject(new Error("图片还原失败"));
+				return;
+			}
+			resolve(event.data.imageData);
+		};
+
+		const handleError = () => {
+			worker.removeEventListener("message", handleMessage);
+			worker.removeEventListener("error", handleError);
+			reject(new Error("图片还原引擎运行失败"));
+		};
+
+		worker.addEventListener("message", handleMessage);
+		worker.addEventListener("error", handleError);
+		worker.postMessage({ id, imageData, maskData, radius, algorithm }, [
+			imageData.data.buffer,
+			maskData.data.buffer,
+		]);
 	});
 }
 
@@ -341,40 +318,40 @@ async function restoreImage(tool: HTMLElement) {
 		setRestoreStatus(tool, "请先涂抹需要还原的区域", true);
 		return;
 	}
+	if (state.isRestoring) {
+		setRestoreStatus(tool, "正在还原图片，请稍等");
+		return;
+	}
 
 	try {
-		setRestoreStatus(tool, "正在加载本地图像修复引擎...");
-		const cv = await loadOpenCv();
-		setRestoreStatus(tool, "正在还原图片...");
-
-		const srcRgba = cv.imread(parts.originalCanvas);
-		const src = cv.imread(parts.originalCanvas);
-		const maskRgba = cv.imread(parts.maskCanvas);
-		const mask = cv.Mat.zeros(
-			parts.maskCanvas.height,
-			parts.maskCanvas.width,
-			cv.CV_8UC1,
-		);
-		const dst = cv.imread(parts.originalCanvas);
-
-		try {
-			cv.cvtColor(srcRgba, src, cv.COLOR_RGBA2RGB);
-			cv.cvtColor(maskRgba, mask, cv.COLOR_RGBA2GRAY);
-			const radius = Math.max(
-				1,
-				Math.min(20, Number(parts.radius?.value || 3)),
-			);
-			const method =
-				parts.algorithm?.value === "ns" ? cv.INPAINT_NS : cv.INPAINT_TELEA;
-			cv.inpaint(src, mask, dst, radius, method);
-			cv.imshow(parts.outputCanvas, dst);
-		} finally {
-			srcRgba.delete();
-			src.delete();
-			maskRgba.delete();
-			mask.delete();
-			dst.delete();
+		state.isRestoring = true;
+		setRestoreStatus(tool, "正在后台还原图片，页面可以继续操作...");
+		const originalContext = parts.originalCanvas.getContext("2d");
+		const maskContext = parts.maskCanvas.getContext("2d");
+		const outputContext = parts.outputCanvas.getContext("2d");
+		if (!originalContext || !maskContext || !outputContext) {
+			throw new Error("当前浏览器不支持 Canvas");
 		}
+
+		const imageData = originalContext.getImageData(
+			0,
+			0,
+			parts.originalCanvas.width,
+			parts.originalCanvas.height,
+		);
+		const maskData = maskContext.getImageData(
+			0,
+			0,
+			parts.maskCanvas.width,
+			parts.maskCanvas.height,
+		);
+		const outputData = await runRestoreInWorker(
+			imageData,
+			maskData,
+			Number(parts.radius?.value || 3),
+			parts.algorithm?.value || "telea",
+		);
+		outputContext.putImageData(outputData, 0, 0);
 
 		parts.outputCanvas.classList.remove("hidden");
 		parts.outputEmpty?.classList.add("hidden");
@@ -401,6 +378,8 @@ async function restoreImage(tool: HTMLElement) {
 			error instanceof Error ? error.message : "图片还原失败",
 			true,
 		);
+	} finally {
+		state.isRestoring = false;
 	}
 }
 
