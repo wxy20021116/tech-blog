@@ -4,7 +4,7 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 
 const title = "在线工具箱";
 const description =
-	"Kris_Wen 在线工具箱，提供 JSON 格式化、时间戳转换、Base64 编码解码、Markdown 转 HTML、文本对比、正则测试、图片压缩、图片局部还原、Solidity 合约入门等开发常用工具。";
+	"Kris_Wen 在线工具箱，提供 JSON 格式化、时间戳转换、Base64 编码解码、Markdown 转 HTML、文本对比、正则测试、图片压缩、图片文字识别、图片局部还原、Solidity 合约入门等开发常用工具。";
 const keywords = [
 	"在线工具",
 	"开发者工具",
@@ -16,6 +16,8 @@ const keywords = [
 	"Git Diff",
 	"正则表达式测试",
 	"图片压缩",
+	"图片文字识别",
+	"OCR 识别",
 	"图片局部还原",
 	"图片水印区域修复",
 	"Solidity",
@@ -71,6 +73,14 @@ const tools = [
 		description: "在浏览器内压缩图片，并可转换为 WebP 格式。",
 		url: "/tools/image-compress/",
 		icon: "material-symbols:compress-rounded",
+		status: "可用",
+	},
+	{
+		name: "图片文字识别",
+		description:
+			"上传图片后本地 OCR，可在图片上拖选文字，也可复制全部识别结果。",
+		url: "/tools/image-ocr/",
+		icon: "material-symbols:image-search-rounded",
 		status: "可用",
 	},
 	{
