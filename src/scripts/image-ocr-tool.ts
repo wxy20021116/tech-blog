@@ -23,6 +23,7 @@ type OcrState = {
 };
 
 const ocrState = new WeakMap<HTMLElement, OcrState>();
+const TESSERACT_WARNING_PREFIX = "Warning: Parameter not found:";
 
 function getOcrParts(tool: HTMLElement) {
 	return {
@@ -86,6 +87,109 @@ function normalizeText(text: string) {
 		.replace(/\r\n/g, "\n")
 		.replace(/[ \t]+\n/g, "\n")
 		.trim();
+}
+
+function filterTesseractParameterWarnings() {
+	const originalWarn = console.warn;
+	const originalError = console.error;
+	const shouldIgnore = (values: unknown[]) =>
+		values.some(
+			(value) =>
+				typeof value === "string" && value.includes(TESSERACT_WARNING_PREFIX),
+		);
+
+	console.warn = (...values: unknown[]) => {
+		if (!shouldIgnore(values)) originalWarn(...values);
+	};
+	console.error = (...values: unknown[]) => {
+		if (!shouldIgnore(values)) originalError(...values);
+	};
+
+	return () => {
+		console.warn = originalWarn;
+		console.error = originalError;
+	};
+}
+
+async function createReadableOcrCanvas(file: File) {
+	const image = await loadImage(file);
+	const maxSide = 2200;
+	const minSideForUpscale = 900;
+	const longestSide = Math.max(image.naturalWidth, image.naturalHeight);
+	const shortestSide = Math.min(image.naturalWidth, image.naturalHeight);
+	let scale = shortestSide < minSideForUpscale ? 2 : 1;
+	if (longestSide * scale > maxSide) scale = maxSide / longestSide;
+
+	const canvas = document.createElement("canvas");
+	canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+	canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+
+	const context = canvas.getContext("2d", {
+		willReadFrequently: true,
+	});
+	if (!context) return canvas;
+
+	context.fillStyle = "#fff";
+	context.fillRect(0, 0, canvas.width, canvas.height);
+	context.imageSmoothingEnabled = true;
+	context.imageSmoothingQuality = "high";
+	context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+	const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+	const pixels = imageData.data;
+	const histogram = new Uint32Array(256);
+
+	for (let index = 0; index < pixels.length; index += 4) {
+		const alpha = pixels[index + 3] / 255;
+		const red = pixels[index] * alpha + 255 * (1 - alpha);
+		const green = pixels[index + 1] * alpha + 255 * (1 - alpha);
+		const blue = pixels[index + 2] * alpha + 255 * (1 - alpha);
+		const gray = Math.round(red * 0.299 + green * 0.587 + blue * 0.114);
+		histogram[gray] += 1;
+	}
+
+	const totalPixels = canvas.width * canvas.height;
+	const lowCutoff = totalPixels * 0.01;
+	const highCutoff = totalPixels * 0.99;
+	let low = 0;
+	let high = 255;
+	let accumulated = 0;
+	for (let value = 0; value < histogram.length; value += 1) {
+		accumulated += histogram[value];
+		if (accumulated >= lowCutoff) {
+			low = value;
+			break;
+		}
+	}
+	accumulated = 0;
+	for (let value = histogram.length - 1; value >= 0; value -= 1) {
+		accumulated += histogram[value];
+		if (accumulated >= totalPixels - highCutoff) {
+			high = value;
+			break;
+		}
+	}
+
+	const contrastRange = Math.max(1, high - low);
+	for (let index = 0; index < pixels.length; index += 4) {
+		const alpha = pixels[index + 3] / 255;
+		const red = pixels[index] * alpha + 255 * (1 - alpha);
+		const green = pixels[index + 1] * alpha + 255 * (1 - alpha);
+		const blue = pixels[index + 2] * alpha + 255 * (1 - alpha);
+		const gray = red * 0.299 + green * 0.587 + blue * 0.114;
+		const contrasted = Math.max(
+			0,
+			Math.min(255, ((gray - low) / contrastRange) * 255),
+		);
+		const sharpened = contrasted < 180 ? contrasted * 0.85 : 255;
+		pixels[index] = sharpened;
+		pixels[index + 1] = sharpened;
+		pixels[index + 2] = sharpened;
+		pixels[index + 3] = 255;
+	}
+
+	context.putImageData(imageData, 0, 0);
+	return canvas;
 }
 
 function getOcrLines(blocks: Tesseract.Block[] | null): OcrLine[] {
@@ -275,10 +379,12 @@ async function recognizeImage(tool: HTMLElement) {
 	if (state.isRecognizing) return;
 
 	state.isRecognizing = true;
+	let worker: Tesseract.Worker | undefined;
+	const restoreConsole = filterTesseractParameterWarnings();
 	try {
 		const language = parts.language?.value || "chi_sim+eng";
 		setOcrStatus(tool, "正在加载 OCR 引擎...");
-		const worker = await Tesseract.createWorker(language, 1, {
+		worker = await Tesseract.createWorker(language, 1, {
 			logger: (message) => {
 				if (message.status === "recognizing text") {
 					const progress = Math.round((message.progress || 0) * 100);
@@ -294,16 +400,31 @@ async function recognizeImage(tool: HTMLElement) {
 			preserve_interword_spaces: "1",
 		});
 
+		setOcrStatus(tool, "正在优化图片...");
+		const readableCanvas = await createReadableOcrCanvas(state.file);
 		const result = await worker.recognize(
-			state.file,
+			readableCanvas,
 			{},
 			{ blocks: true, text: true },
 		);
-		await worker.terminate();
+		let text = normalizeText(result.data.text);
+		let blocks = result.data.blocks;
+		let confidence = result.data.confidence;
 
-		const text = normalizeText(result.data.text);
-		const lines = getOcrLines(result.data.blocks);
-		const words = getOcrWords(result.data.blocks);
+		if (!text) {
+			setOcrStatus(tool, "增强图未识别到文字，正在尝试原图...");
+			const fallbackResult = await worker.recognize(
+				state.file,
+				{},
+				{ blocks: true, text: true },
+			);
+			text = normalizeText(fallbackResult.data.text);
+			blocks = fallbackResult.data.blocks;
+			confidence = fallbackResult.data.confidence;
+		}
+
+		const lines = getOcrLines(blocks);
+		const words = getOcrWords(blocks);
 		ocrState.set(tool, {
 			...state,
 			text,
@@ -315,9 +436,7 @@ async function recognizeImage(tool: HTMLElement) {
 		if (parts.output) parts.output.value = text;
 		setOcrText(
 			parts.confidence,
-			Number.isFinite(result.data.confidence)
-				? `${Math.round(result.data.confidence)}%`
-				: "--",
+			Number.isFinite(confidence) ? `${Math.round(confidence)}%` : "--",
 		);
 		renderTextLayer(tool);
 		renderLines(tool);
@@ -333,6 +452,9 @@ async function recognizeImage(tool: HTMLElement) {
 			error instanceof Error ? error.message : "图片文字识别失败",
 			true,
 		);
+	} finally {
+		restoreConsole();
+		if (worker) await worker.terminate();
 	}
 }
 
