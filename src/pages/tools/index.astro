@@ -4,7 +4,7 @@ import MainGridLayout from "../../layouts/MainGridLayout.astro";
 
 const title = "在线工具箱";
 const description =
-	"Kris_Wen 在线工具箱，提供 JSON 格式化、时间戳转换、Base64 编码解码、Markdown 转 HTML、文本对比、正则测试、图片压缩、图片局部还原等开发常用工具。";
+	"Kris_Wen 在线工具箱，提供 JSON 格式化、时间戳转换、Base64 编码解码、Markdown 转 HTML、文本对比、正则测试、图片压缩、图片局部还原、Solidity 合约入门等开发常用工具。";
 const keywords = [
 	"在线工具",
 	"开发者工具",
@@ -18,6 +18,9 @@ const keywords = [
 	"图片压缩",
 	"图片局部还原",
 	"图片水印区域修复",
+	"Solidity",
+	"Web3",
+	"智能合约",
 	"PDF 转图片",
 ];
 const tools = [
@@ -75,6 +78,14 @@ const tools = [
 		description: "涂抹水印、时间戳或遮挡区域，在浏览器本地尽量还原图片。",
 		url: "/tools/image-restore/",
 		icon: "material-symbols:ink-eraser-rounded",
+		status: "可用",
+	},
+	{
+		name: "Solidity 代币合约入门",
+		description:
+			"填写代币参数，生成 ERC-20 学习模板、发行量试算和部署前检查清单。",
+		url: "/tools/solidity-starter/",
+		icon: "material-symbols:token-rounded",
 		status: "可用",
 	},
 ];

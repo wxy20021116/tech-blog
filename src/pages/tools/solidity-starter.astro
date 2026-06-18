@@ -1,0 +1,249 @@
+---
+import { Icon } from "astro-icon/components";
+import MainGridLayout from "../../layouts/MainGridLayout.astro";
+
+const title = "Solidity 代币合约入门工具";
+const description =
+	"在线 Solidity 代币合约入门工具，支持填写代币名称、符号、发行量和小数位，生成 ERC-20 学习模板、部署前检查清单和基础代币参数试算。";
+const keywords = [
+	"Solidity",
+	"Web3",
+	"区块链",
+	"智能合约",
+	"ERC20",
+	"代币合约",
+	"虚拟货币",
+	"合约模板",
+];
+const pageUrl = new URL(
+	"/tools/solidity-starter/",
+	Astro.site || Astro.url.origin,
+).toString();
+const jsonLd = [
+	{
+		"@context": "https://schema.org",
+		"@type": "WebApplication",
+		name: title,
+		description,
+		url: pageUrl,
+		applicationCategory: "DeveloperApplication",
+		operatingSystem: "Any",
+		inLanguage: "zh-CN",
+		offers: {
+			"@type": "Offer",
+			price: "0",
+			priceCurrency: "CNY",
+		},
+	},
+	{
+		"@context": "https://schema.org",
+		"@type": "FAQPage",
+		mainEntity: [
+			{
+				"@type": "Question",
+				name: "这个工具能直接帮我发行虚拟货币吗？",
+				acceptedAnswer: {
+					"@type": "Answer",
+					text: "不能。页面只生成 Solidity 学习模板和参数试算，不连接钱包、不部署合约，也不提供投资或收益承诺。",
+				},
+			},
+			{
+				"@type": "Question",
+				name: "Solidity 合约上线前需要注意什么？",
+				acceptedAnswer: {
+					"@type": "Answer",
+					text: "至少需要在测试网部署验证、使用成熟库、做权限和铸币逻辑检查，并在主网上线前完成代码审计和法律合规评估。",
+				},
+			},
+		],
+	},
+	{
+		"@context": "https://schema.org",
+		"@type": "BreadcrumbList",
+		itemListElement: [
+			{
+				"@type": "ListItem",
+				position: 1,
+				name: "工具",
+				item: new URL("/tools/", Astro.site || Astro.url.origin).toString(),
+			},
+			{
+				"@type": "ListItem",
+				position: 2,
+				name: title,
+				item: pageUrl,
+			},
+		],
+	},
+];
+---
+
+<MainGridLayout title={title} description={description} keywords={keywords}>
+	<script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
+	<section class="card-base px-6 py-7 md:px-9 md:py-8">
+		<a href="/tools/" class="link-lg inline-flex items-center text-sm font-medium text-50">
+			<Icon name="material-symbols:arrow-back-rounded" class="mr-1 text-[1.2rem]" />
+			工具箱
+		</a>
+		<div class="mt-4 max-w-3xl">
+			<p class="text-sm font-semibold text-[var(--primary)]">Solidity Starter</p>
+			<h1 class="mt-2 text-2xl font-bold text-90 md:text-3xl">{title}</h1>
+			<p class="mt-3 leading-7 text-75">
+				给想摸一摸 Web3 和 Solidity 的开发者一个安全起点：先理解代币参数、合约骨架、部署检查和风险边界，再决定是否进入测试网实践。
+			</p>
+		</div>
+	</section>
+
+	<solidity-starter-tool class="card-base mt-4 block overflow-hidden">
+		<div class="grid gap-px bg-[var(--line-divider)] xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+			<section class="bg-[var(--card-bg)] p-4 md:p-5">
+				<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+					<div>
+						<h2 class="text-base font-bold text-90">代币参数</h2>
+						<p class="mt-1 text-sm text-50">生成 ERC-20 学习模板和发行量试算。</p>
+					</div>
+					<button type="button" data-action="sample" class="btn-regular h-9 rounded-lg px-3 text-sm font-medium">
+						示例
+					</button>
+				</div>
+
+				<div class="grid gap-4">
+					<label class="grid gap-2 text-sm font-medium text-75">
+						代币名称
+						<input
+							data-token-name
+							value="Kris Web3 Demo"
+							class="h-11 rounded-lg border border-black/10 bg-[var(--page-bg)] px-3 text-sm text-90 outline-none transition focus:border-[var(--primary)] dark:border-white/10"
+						/>
+					</label>
+					<label class="grid gap-2 text-sm font-medium text-75">
+						代币符号
+						<input
+							data-token-symbol
+							value="KWD"
+							maxlength="12"
+							class="h-11 rounded-lg border border-black/10 bg-[var(--page-bg)] px-3 font-mono text-sm uppercase text-90 outline-none transition focus:border-[var(--primary)] dark:border-white/10"
+						/>
+					</label>
+					<div class="grid gap-4 sm:grid-cols-2">
+						<label class="grid gap-2 text-sm font-medium text-75">
+							发行量
+							<input
+								data-token-supply
+								value="1000000"
+								inputmode="decimal"
+								class="h-11 rounded-lg border border-black/10 bg-[var(--page-bg)] px-3 font-mono text-sm text-90 outline-none transition focus:border-[var(--primary)] dark:border-white/10"
+							/>
+						</label>
+						<label class="grid gap-2 text-sm font-medium text-75">
+							小数位
+							<input
+								data-token-decimals
+								value="18"
+								inputmode="numeric"
+								class="h-11 rounded-lg border border-black/10 bg-[var(--page-bg)] px-3 font-mono text-sm text-90 outline-none transition focus:border-[var(--primary)] dark:border-white/10"
+							/>
+						</label>
+					</div>
+					<label class="grid gap-2 text-sm font-medium text-75">
+						部署接收地址
+						<input
+							data-owner-address
+							placeholder="0x..."
+							class="h-11 rounded-lg border border-black/10 bg-[var(--page-bg)] px-3 font-mono text-sm text-90 outline-none transition focus:border-[var(--primary)] dark:border-white/10"
+						/>
+					</label>
+				</div>
+
+				<div class="mt-5 grid gap-3 sm:grid-cols-3">
+					<div class="rounded-lg bg-[var(--page-bg)] p-4">
+						<p class="text-sm text-50">展示发行量</p>
+						<p data-display-supply class="mt-2 break-all font-mono text-lg font-bold text-90">--</p>
+					</div>
+					<div class="rounded-lg bg-[var(--page-bg)] p-4">
+						<p class="text-sm text-50">最小单位数量</p>
+						<p data-raw-supply class="mt-2 break-all font-mono text-sm font-bold leading-6 text-90">--</p>
+					</div>
+					<div class="rounded-lg bg-[var(--page-bg)] p-4">
+						<p class="text-sm text-50">风险等级</p>
+						<p data-risk-level class="mt-2 font-bold text-90">学习实验</p>
+					</div>
+				</div>
+
+				<div class="mt-5 flex flex-wrap gap-2">
+					<button type="button" data-action="generate" class="btn-regular h-9 rounded-lg px-3 text-sm font-medium">
+						生成合约
+					</button>
+					<button type="button" data-action="copy" class="btn-regular h-9 rounded-lg px-3 text-sm font-medium">
+						复制代码
+					</button>
+					<button type="button" data-action="clear" class="btn-plain h-9 rounded-lg px-3 text-sm font-medium">
+						清空
+					</button>
+				</div>
+			</section>
+
+			<section class="bg-[var(--card-bg)] p-4 md:p-5">
+				<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+					<h2 class="text-base font-bold text-90">Solidity 模板</h2>
+					<p data-status class="text-sm text-50">等待生成合约模板</p>
+				</div>
+				<textarea
+					data-output
+					spellcheck="false"
+					readonly
+					class="h-[32rem] w-full resize-y rounded-lg border border-black/10 bg-[var(--page-bg)] p-4 font-mono text-sm leading-6 text-90 outline-none transition dark:border-white/10"
+				></textarea>
+			</section>
+		</div>
+
+		<section class="border-t border-[var(--line-divider)] bg-[var(--card-bg)] px-4 py-4 md:px-5">
+			<h2 class="text-base font-bold text-90">部署前检查</h2>
+			<div class="mt-3 grid gap-3 md:grid-cols-2">
+				<label class="flex items-start gap-3 rounded-lg bg-[var(--page-bg)] p-3 text-sm text-75">
+					<input class="mt-1 h-4 w-4 accent-[var(--primary)]" type="checkbox" />
+					<span>先在 Sepolia 等测试网部署，确认钱包、Gas、区块浏览器验证流程都走通。</span>
+				</label>
+				<label class="flex items-start gap-3 rounded-lg bg-[var(--page-bg)] p-3 text-sm text-75">
+					<input class="mt-1 h-4 w-4 accent-[var(--primary)]" type="checkbox" />
+					<span>生产合约优先使用 OpenZeppelin 等成熟库，不要直接把学习模板上主网。</span>
+				</label>
+				<label class="flex items-start gap-3 rounded-lg bg-[var(--page-bg)] p-3 text-sm text-75">
+					<input class="mt-1 h-4 w-4 accent-[var(--primary)]" type="checkbox" />
+					<span>确认是否保留 owner、mint、burn、pause 等权限，以及这些权限由谁持有。</span>
+				</label>
+				<label class="flex items-start gap-3 rounded-lg bg-[var(--page-bg)] p-3 text-sm text-75">
+					<input class="mt-1 h-4 w-4 accent-[var(--primary)]" type="checkbox" />
+					<span>涉及募资、返利、分红、交易承诺时，先做法律合规评估。</span>
+				</label>
+			</div>
+		</section>
+	</solidity-starter-tool>
+
+	<section class="card-base mt-4 px-6 py-6 md:px-9">
+		<h2 class="text-xl font-bold text-90">常见问题</h2>
+		<div class="mt-4 grid gap-4 md:grid-cols-2">
+			<div>
+				<h3 class="font-bold text-90">做 Web3 有可能赚到虚拟货币吗？</h3>
+				<p class="mt-2 leading-7 text-75">
+					有可能，但通常来自真实产品、开源贡献、生态任务、链上工具或内容带来的长期价值，不是简单发一个币就能稳定赚钱。合约和资产都有安全、市场和合规风险。
+				</p>
+			</div>
+			<div>
+				<h3 class="font-bold text-90">这个页面适合拿来做什么？</h3>
+				<p class="mt-2 leading-7 text-75">
+					适合做 Solidity 入门、博客内容展示、测试网实验和作品集素材。真正上线前，还需要完整测试、审计、权限设计和合规判断。
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="card-base mt-4 px-6 py-6 md:px-9">
+		<h2 class="text-xl font-bold text-90">相关工具</h2>
+		<div class="mt-3 flex flex-wrap gap-2">
+			<a href="/tools/" class="btn-regular rounded-lg px-3 py-2 text-sm font-medium">在线工具箱</a>
+			<a href="/tools/json-format/" class="btn-regular rounded-lg px-3 py-2 text-sm font-medium">JSON 格式化</a>
+			<a href="/tools/base64/" class="btn-regular rounded-lg px-3 py-2 text-sm font-medium">Base64 编码解码</a>
+		</div>
+	</section>
+</MainGridLayout>
