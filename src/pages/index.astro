@@ -1,17 +1,21 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import { navBarConfig, siteConfig } from "../config";
+import { LinkPresets } from "../constants/link-presets";
+import { LinkPreset, type NavBarLink } from "../types/config";
 import { url } from "../utils/url-utils";
 
 const videoSrc =
 	"https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4";
 
-const navLinks = [
-	{ name: "首页", href: "/" },
-	{ name: "文章", href: "/articles/" },
-	{ name: "作品集", href: "/portfolio/" },
-	{ name: "工具", href: "/tools/" },
-	{ name: "关于", href: "/about/" },
-];
+const navLinks: NavBarLink[] = navBarConfig.links.map(
+	(item: NavBarLink | LinkPreset): NavBarLink => {
+		if (typeof item === "number") {
+			return LinkPresets[item];
+		}
+		return item;
+	},
+);
 ---
 
 <Layout
@@ -47,17 +51,19 @@ const navLinks = [
 				class="text-3xl font-normal tracking-tight text-[hsl(var(--foreground))]"
 				style="font-family: 'Instrument Serif', serif"
 			>
-				Velorah<sup class="text-xs">®</sup>
+				{siteConfig.title}
 			</a>
 
 			<div class="hidden items-center gap-8 md:flex">
 				{
 					navLinks.map((link) => (
 						<a
-							href={url(link.href)}
+							href={link.external ? link.url : url(link.url)}
+							target={link.external ? "_blank" : null}
+							data-no-swup={!link.external ? true : undefined}
 							class:list={[
 								"text-sm transition-colors hover:text-[hsl(var(--foreground))]",
-								link.href === "/"
+								link.url === "/"
 									? "text-[hsl(var(--foreground))]"
 									: "text-[hsl(var(--muted-foreground))]",
 							]}
@@ -70,6 +76,7 @@ const navLinks = [
 
 			<a
 				href={url("/articles/")}
+				data-no-swup
 				class="liquid-glass rounded-full px-5 py-2.5 text-sm text-[hsl(var(--foreground))] transition-transform hover:scale-[1.03] sm:px-6"
 			>
 				开始阅读
@@ -80,25 +87,23 @@ const navLinks = [
 			class="relative z-10 mx-auto flex min-h-[calc(100vh-88px)] max-w-7xl flex-col items-center justify-center px-6 py-[90px] pb-40 pt-28 text-center sm:pt-32"
 		>
 			<h1
-				class="animate-fade-rise max-w-7xl text-5xl font-normal leading-[0.95] tracking-[-1.8px] text-[hsl(var(--foreground))] sm:text-7xl md:text-8xl md:tracking-[-2.46px]"
+				class="animate-fade-rise max-w-5xl text-balance text-5xl font-normal leading-[1.02] tracking-[-1px] text-[hsl(var(--foreground))] sm:text-6xl md:text-7xl lg:text-8xl"
 				style="font-family: 'Instrument Serif', serif"
 			>
-				在复杂系统里，让<em class="not-italic text-[hsl(var(--muted-foreground))]"
-					>经验</em
-				>穿过沉默，<em class="not-italic text-[hsl(var(--muted-foreground))]"
-					>长成清晰的工程判断。</em
+				把复杂系统，写成<em
+					class="not-italic text-[hsl(var(--muted-foreground))]">清晰的工程判断。</em
 				>
 			</h1>
 
 			<p
 				class="animate-fade-rise-delay mt-8 max-w-2xl text-base leading-relaxed text-[hsl(var(--muted-foreground))] sm:text-lg"
 			>
-				这里记录后端、Web、PDA
-				多端协同开发中的真实问题：状态一致性、流程收口、资源生命周期与交付现场的细节。把每天踩过的坑，变成下一次可以复用的路标。
+				记录后端、Web、PDA 多端协同开发中的真实问题：状态一致性、流程收口、资源生命周期与交付现场的细节。把每天踩过的坑，变成下一次可以复用的路标。
 			</p>
 
 			<a
 				href={url("/articles/")}
+				data-no-swup
 				class="liquid-glass animate-fade-rise-delay-2 mt-12 cursor-pointer rounded-full px-14 py-5 text-base text-[hsl(var(--foreground))] transition-transform hover:scale-[1.03]"
 			>
 				进入文章
