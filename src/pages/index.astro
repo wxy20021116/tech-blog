@@ -1,0 +1,187 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { url } from "../utils/url-utils";
+
+const videoSrc =
+	"https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4";
+
+const navLinks = [
+	{ name: "首页", href: "/" },
+	{ name: "文章", href: "/articles/" },
+	{ name: "作品集", href: "/portfolio/" },
+	{ name: "工具", href: "/tools/" },
+	{ name: "关于", href: "/about/" },
+];
+---
+
+<Layout
+	title="首页"
+	description="Kris_Wen Tech Notes：把复杂系统里的状态、流程与协作经验，沉淀成可复用的工程笔记。"
+>
+	<link rel="preconnect" href="https://fonts.googleapis.com" slot="head" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin slot="head" />
+	<link
+		href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&display=swap"
+		rel="stylesheet"
+		slot="head"
+	/>
+
+	<main class="hero-home relative min-h-screen overflow-hidden text-[hsl(var(--foreground))]">
+		<video
+			class="absolute inset-0 z-0 h-full w-full object-cover"
+			src={videoSrc}
+			autoplay
+			loop
+			muted
+			playsinline
+			aria-hidden="true"
+		>
+		</video>
+
+		<nav
+			class="relative z-10 mx-auto flex max-w-7xl flex-row items-center justify-between px-5 py-5 sm:px-8 sm:py-6"
+			aria-label="首页导航"
+		>
+			<a
+				href={url("/")}
+				class="text-3xl font-normal tracking-tight text-[hsl(var(--foreground))]"
+				style="font-family: 'Instrument Serif', serif"
+			>
+				Velorah<sup class="text-xs">®</sup>
+			</a>
+
+			<div class="hidden items-center gap-8 md:flex">
+				{
+					navLinks.map((link) => (
+						<a
+							href={url(link.href)}
+							class:list={[
+								"text-sm transition-colors hover:text-[hsl(var(--foreground))]",
+								link.href === "/"
+									? "text-[hsl(var(--foreground))]"
+									: "text-[hsl(var(--muted-foreground))]",
+							]}
+						>
+							{link.name}
+						</a>
+					))
+				}
+			</div>
+
+			<a
+				href={url("/articles/")}
+				class="liquid-glass rounded-full px-5 py-2.5 text-sm text-[hsl(var(--foreground))] transition-transform hover:scale-[1.03] sm:px-6"
+			>
+				开始阅读
+			</a>
+		</nav>
+
+		<section
+			class="relative z-10 mx-auto flex min-h-[calc(100vh-88px)] max-w-7xl flex-col items-center justify-center px-6 py-[90px] pb-40 pt-28 text-center sm:pt-32"
+		>
+			<h1
+				class="animate-fade-rise max-w-7xl text-5xl font-normal leading-[0.95] tracking-[-1.8px] text-[hsl(var(--foreground))] sm:text-7xl md:text-8xl md:tracking-[-2.46px]"
+				style="font-family: 'Instrument Serif', serif"
+			>
+				在复杂系统里，让<em class="not-italic text-[hsl(var(--muted-foreground))]"
+					>经验</em
+				>穿过沉默，<em class="not-italic text-[hsl(var(--muted-foreground))]"
+					>长成清晰的工程判断。</em
+				>
+			</h1>
+
+			<p
+				class="animate-fade-rise-delay mt-8 max-w-2xl text-base leading-relaxed text-[hsl(var(--muted-foreground))] sm:text-lg"
+			>
+				这里记录后端、Web、PDA
+				多端协同开发中的真实问题：状态一致性、流程收口、资源生命周期与交付现场的细节。把每天踩过的坑，变成下一次可以复用的路标。
+			</p>
+
+			<a
+				href={url("/articles/")}
+				class="liquid-glass animate-fade-rise-delay-2 mt-12 cursor-pointer rounded-full px-14 py-5 text-base text-[hsl(var(--foreground))] transition-transform hover:scale-[1.03]"
+			>
+				进入文章
+			</a>
+		</section>
+	</main>
+</Layout>
+
+<style is:global>
+	:root {
+		--font-display: "Instrument Serif", serif;
+		--font-body: "Inter", sans-serif;
+	}
+
+	.hero-home {
+		--background: 201 100% 13%;
+		--foreground: 0 0% 100%;
+		--muted-foreground: 240 4% 66%;
+		--primary: 0 0% 100%;
+		--primary-foreground: 0 0% 4%;
+		--secondary: 0 0% 10%;
+		--muted: 0 0% 10%;
+		--accent: 0 0% 10%;
+		--border: 0 0% 18%;
+		--input: 0 0% 18%;
+		background: hsl(var(--background));
+		font-family: var(--font-body);
+	}
+
+	.hero-home .liquid-glass {
+		background: rgba(255, 255, 255, 0.01);
+		background-blend-mode: luminosity;
+		backdrop-filter: blur(4px);
+		-webkit-backdrop-filter: blur(4px);
+		border: none;
+		box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+		position: relative;
+		overflow: hidden;
+	}
+
+	.hero-home .liquid-glass::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		padding: 1.4px;
+		background: linear-gradient(
+			180deg,
+			rgba(255, 255, 255, 0.45) 0%,
+			rgba(255, 255, 255, 0.15) 20%,
+			rgba(255, 255, 255, 0) 40%,
+			rgba(255, 255, 255, 0) 60%,
+			rgba(255, 255, 255, 0.15) 80%,
+			rgba(255, 255, 255, 0.45) 100%
+		);
+		-webkit-mask:
+			linear-gradient(#fff 0 0) content-box,
+			linear-gradient(#fff 0 0);
+		-webkit-mask-composite: xor;
+		mask-composite: exclude;
+		pointer-events: none;
+	}
+
+	@keyframes fade-rise {
+		from {
+			opacity: 0;
+			transform: translateY(24px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	.hero-home .animate-fade-rise {
+		animation: fade-rise 0.8s ease-out both;
+	}
+
+	.hero-home .animate-fade-rise-delay {
+		animation: fade-rise 0.8s ease-out 0.2s both;
+	}
+
+	.hero-home .animate-fade-rise-delay-2 {
+		animation: fade-rise 0.8s ease-out 0.4s both;
+	}
+</style>

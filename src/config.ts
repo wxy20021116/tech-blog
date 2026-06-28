@@ -63,6 +63,11 @@ export const siteConfig: SiteConfig = {
 
 export const navBarConfig: NavBarConfig = {
 	links: [
+		LinkPreset.Home,
+		{
+			name: "文章",
+			url: "/articles/",
+		},
 		{
 			name: "作品集",
 			url: "/portfolio/",
@@ -71,7 +76,6 @@ export const navBarConfig: NavBarConfig = {
 			name: "工具",
 			url: "/tools/",
 		},
-		LinkPreset.Home,
 		LinkPreset.Archive,
 		LinkPreset.About,
 		{
