@@ -5,8 +5,17 @@ import { LinkPresets } from "../constants/link-presets";
 import { LinkPreset, type NavBarLink } from "../types/config";
 import { url } from "../utils/url-utils";
 
-const videoSrc =
-	"https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4";
+const videos = {
+	hero: "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4",
+	field:
+		"https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260622_092455_089c54f8-3b03-4966-9df1-e9746063d0ef.mp4",
+	metrics:
+		"https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260622_095810_ecea3dd2-fc5e-4e41-8696-4219290b6589.mp4",
+	system:
+		"https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260622_095750_32a52ce0-2005-45c9-9093-41f03fde9530.mp4",
+	footer:
+		"https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260622_080203_fd7f4f85-3a86-4837-8192-85e7bfe68e75.mp4",
+};
 
 const navLinks: NavBarLink[] = navBarConfig.links.map(
 	(item: NavBarLink | LinkPreset): NavBarLink => {
@@ -16,6 +25,31 @@ const navLinks: NavBarLink[] = navBarConfig.links.map(
 		return item;
 	},
 );
+
+const metrics = [
+	{ value: "18+", label: "真实项目复盘" },
+	{ value: "4", label: "端侧协作维度" },
+	{ value: "0→1", label: "从问题到模式" },
+];
+
+const systems = [
+	{
+		title: "状态一致性",
+		desc: "把散落在页面、接口、硬件回调里的状态收束成可验证的流程契约。",
+	},
+	{
+		title: "终态清理",
+		desc: "让每个任务都有明确的结束、释放、回滚与下一步交接。",
+	},
+	{
+		title: "多端协同",
+		desc: "Web、PDA、后端与现场设备之间，不靠猜测同步，只靠边界和事件。",
+	},
+	{
+		title: "交付记忆",
+		desc: "把一次次临场判断沉淀成文章，让下一次开发少一点混沌。",
+	},
+];
 ---
 
 <Layout
@@ -24,91 +58,149 @@ const navLinks: NavBarLink[] = navBarConfig.links.map(
 >
 	<link rel="preconnect" href="https://fonts.googleapis.com" slot="head" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin slot="head" />
+	<link rel="preconnect" href="https://d8j0ntlcm91z4.cloudfront.net" crossorigin slot="head" />
 	<link
-		href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&display=swap"
+		href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap"
 		rel="stylesheet"
 		slot="head"
 	/>
 
-	<main class="hero-home relative min-h-screen overflow-hidden text-[hsl(var(--foreground))]">
-		<video
-			class="absolute inset-0 z-0 h-full w-full object-cover"
-			src={videoSrc}
-			autoplay
-			loop
-			muted
-			playsinline
-			aria-hidden="true"
-		>
-		</video>
-
-		<nav
-			class="relative z-10 mx-auto flex max-w-7xl flex-row items-center justify-between px-5 py-5 sm:px-8 sm:py-6"
-			aria-label="首页导航"
-		>
-			<a
-				href={url("/")}
-				class="text-3xl font-normal tracking-tight text-[hsl(var(--foreground))]"
-				style="font-family: 'Instrument Serif', serif"
-			>
-				{siteConfig.title}
-			</a>
-
-			<div class="hidden items-center gap-8 md:flex">
+	<main class="home-experience text-[hsl(var(--foreground))]">
+		<nav class="home-nav" aria-label="首页导航">
+			<a href={url("/")} class="home-brand" data-no-swup>{siteConfig.title}</a>
+			<div class="home-nav-links">
 				{
 					navLinks.map((link) => (
 						<a
 							href={link.external ? link.url : url(link.url)}
 							target={link.external ? "_blank" : null}
 							data-no-swup={!link.external ? true : undefined}
-							class:list={[
-								"text-sm transition-colors hover:text-[hsl(var(--foreground))]",
-								link.url === "/"
-									? "text-[hsl(var(--foreground))]"
-									: "text-[hsl(var(--muted-foreground))]",
-							]}
+							class:list={[link.url === "/" && "is-active"]}
 						>
 							{link.name}
 						</a>
 					))
 				}
 			</div>
-
-			<a
-				href={url("/articles/")}
-				data-no-swup
-				class="liquid-glass rounded-full px-5 py-2.5 text-sm text-[hsl(var(--foreground))] transition-transform hover:scale-[1.03] sm:px-6"
-			>
-				开始阅读
-			</a>
+			<a href={url("/articles/")} class="home-pill" data-no-swup>进入文章</a>
 		</nav>
 
-		<section
-			class="relative z-10 mx-auto flex min-h-[calc(100vh-88px)] max-w-7xl flex-col items-center justify-center px-6 py-[90px] pb-40 pt-28 text-center sm:pt-32"
-		>
-			<h1
-				class="animate-fade-rise max-w-5xl text-balance text-5xl font-normal leading-[1.02] tracking-[-1px] text-[hsl(var(--foreground))] sm:text-6xl md:text-7xl lg:text-8xl"
-				style="font-family: 'Instrument Serif', serif"
+		<section class="home-section hero-section" data-reveal-section>
+			<video
+				id="hero-video"
+				class="section-video"
+				src={videos.hero}
+				autoplay
+				loop
+				muted
+				playsinline
+				aria-hidden="true"
 			>
-				把复杂系统，写成<em
-					class="not-italic text-[hsl(var(--muted-foreground))]">清晰的工程判断。</em
-				>
-			</h1>
+			</video>
+			<div class="home-grain"></div>
+			<div class="hero-watermark" aria-hidden="true">FIELD NOTES</div>
 
-			<p
-				class="animate-fade-rise-delay mt-8 max-w-2xl text-base leading-relaxed text-[hsl(var(--muted-foreground))] sm:text-lg"
-			>
-				记录后端、Web、PDA 多端协同开发中的真实问题：状态一致性、流程收口、资源生命周期与交付现场的细节。把每天踩过的坑，变成下一次可以复用的路标。
-			</p>
+			<div class="hero-layout">
+				<div class="hero-copy">
+					<p class="eyebrow reveal-item">ENGINEERING MEMORY / 2026</p>
+					<h1 class="reveal-item" style="font-family: 'Instrument Serif', serif">
+						把复杂系统，写成
+						<em>清晰的工程判断。</em>
+					</h1>
+					<p class="hero-desc reveal-item">
+						记录后端、Web、PDA 多端协同开发中的真实问题：状态一致性、流程收口、资源生命周期与交付现场的细节。
+					</p>
+				</div>
 
-			<a
-				href={url("/articles/")}
-				data-no-swup
-				class="liquid-glass animate-fade-rise-delay-2 mt-12 cursor-pointer rounded-full px-14 py-5 text-base text-[hsl(var(--foreground))] transition-transform hover:scale-[1.03]"
-			>
-				进入文章
-			</a>
+				<div class="signal-stage reveal-item" aria-hidden="true">
+					<div class="signal-orbit">
+						<div class="signal-head" id="signal-head">
+							<span></span>
+							<i></i>
+						</div>
+					</div>
+					<div class="signal-caption">
+						<span>cursor-aware</span>
+						<strong>观察节点</strong>
+					</div>
+				</div>
+			</div>
 		</section>
+
+		<section class="home-section text-section" data-reveal-section>
+			<video class="section-video" src={videos.field} autoplay muted loop playsinline aria-hidden="true"></video>
+			<div class="section-shade"></div>
+			<p class="cinematic-line reveal-item">
+				每一次线上问题、每一次扫码异常、每一次状态错乱，都不是孤立事件。它们会指向系统深处的契约、时序、边界与责任。
+			</p>
+		</section>
+
+		<section class="home-section metrics-section" data-reveal-section>
+			<video class="section-video" src={videos.metrics} autoplay muted loop playsinline aria-hidden="true"></video>
+			<div class="section-shade"></div>
+			<div class="section-inner">
+				<p class="eyebrow reveal-item">PRACTICE SIGNALS</p>
+				<div class="metrics-grid">
+					{
+						metrics.map((item) => (
+							<div class="metric-card reveal-item">
+								<strong>{item.value}</strong>
+								<span>{item.label}</span>
+							</div>
+						))
+					}
+				</div>
+			</div>
+		</section>
+
+		<section class="home-section system-section" data-reveal-section>
+			<video class="section-video" src={videos.system} autoplay muted loop playsinline aria-hidden="true"></video>
+			<div class="section-shade"></div>
+			<div class="section-inner system-layout">
+				<div>
+					<p class="eyebrow reveal-item">SYSTEM THINKING</p>
+					<h2 class="reveal-item" style="font-family: 'Instrument Serif', serif">
+						从现场噪声里，提炼可复用的结构。
+					</h2>
+				</div>
+				<div class="system-grid">
+					{
+						systems.map((item) => (
+							<article class="system-card reveal-item">
+								<h3>{item.title}</h3>
+								<p>{item.desc}</p>
+							</article>
+						))
+					}
+				</div>
+			</div>
+		</section>
+
+		<section class="architecture-section" data-reveal-section>
+			<div class="architecture-inner">
+				<p class="eyebrow reveal-item">ARCHITECTURE</p>
+				<h2 class="reveal-item" style="font-family: 'Instrument Serif', serif">
+					问题进入现场，经验返回系统。
+				</h2>
+				<p class="architecture-desc reveal-item">
+					这个博客不只是文章列表，而是一条持续生长的工程链路：观察问题、拆解状态、固化契约、回到下一次交付。
+				</p>
+				<div class="layer-stack reveal-item">
+					<div><span>Layer 01</span><strong>Observe</strong></div>
+					<div><span>Layer 02</span><strong>Model</strong></div>
+					<div><span>Layer 03</span><strong>Deliver</strong></div>
+				</div>
+			</div>
+		</section>
+
+		<footer class="home-footer">
+			<video class="footer-video" src={videos.footer} autoplay muted loop playsinline aria-hidden="true"></video>
+			<div class="footer-copy">
+				<strong>{siteConfig.title}</strong>
+				<p>把日常开发沉淀成可复用的工程经验。慢慢写，持续校准，直到复杂问题变得可以讨论、可以复盘、可以交付。</p>
+				<a href={url("/articles/")} data-no-swup>继续阅读</a>
+			</div>
+		</footer>
 	</main>
 </Layout>
 
@@ -118,75 +210,600 @@ const navLinks: NavBarLink[] = navBarConfig.links.map(
 		--font-body: "Inter", sans-serif;
 	}
 
-	.hero-home {
-		--background: 201 100% 13%;
+	.home-experience {
+		--background: 201 100% 8%;
 		--foreground: 0 0% 100%;
-		--muted-foreground: 240 4% 66%;
-		--primary: 0 0% 100%;
-		--primary-foreground: 0 0% 4%;
-		--secondary: 0 0% 10%;
-		--muted: 0 0% 10%;
-		--accent: 0 0% 10%;
-		--border: 0 0% 18%;
-		--input: 0 0% 18%;
-		background: hsl(var(--background));
+		--muted-foreground: 220 10% 68%;
+		--line: rgba(255, 255, 255, 0.14);
+		background: #02090d;
 		font-family: var(--font-body);
+		overflow-x: hidden;
+		scroll-behavior: smooth;
 	}
 
-	.hero-home .liquid-glass {
-		background: rgba(255, 255, 255, 0.01);
-		background-blend-mode: luminosity;
-		backdrop-filter: blur(4px);
-		-webkit-backdrop-filter: blur(4px);
-		border: none;
-		box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+	.home-experience * {
+		box-sizing: border-box;
+	}
+
+	.home-nav {
+		position: fixed;
+		top: 18px;
+		left: 50%;
+		z-index: 50;
+		display: grid;
+		width: min(1120px, calc(100% - 32px));
+		grid-template-columns: 1fr auto 1fr;
+		align-items: center;
+		gap: 18px;
+		transform: translateX(-50%);
+	}
+
+	.home-brand,
+	.home-nav-links,
+	.home-pill {
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		background: rgba(255, 255, 255, 0.08);
+		backdrop-filter: blur(14px);
+		-webkit-backdrop-filter: blur(14px);
+		box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.14);
+	}
+
+	.home-brand,
+	.home-pill {
+		width: fit-content;
+		border-radius: 999px;
+		color: white;
+		text-decoration: none;
+	}
+
+	.home-brand {
+		padding: 12px 18px;
+		font-family: var(--font-display);
+		font-size: 1.35rem;
+		letter-spacing: -0.02em;
+	}
+
+	.home-nav-links {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 4px;
+		border-radius: 999px;
+		padding: 6px;
+	}
+
+	.home-nav-links a {
+		border-radius: 999px;
+		padding: 8px 13px;
+		color: rgba(255, 255, 255, 0.62);
+		font-size: 0.86rem;
+		text-decoration: none;
+		transition: color 0.2s ease, background 0.2s ease;
+	}
+
+	.home-nav-links a:hover,
+	.home-nav-links a.is-active {
+		background: rgba(255, 255, 255, 0.1);
+		color: white;
+	}
+
+	.home-pill {
+		justify-self: end;
+		padding: 12px 18px;
+		font-size: 0.9rem;
+		transition: transform 0.2s ease, background 0.2s ease;
+	}
+
+	.home-pill:hover {
+		background: rgba(255, 255, 255, 0.14);
+		transform: translateY(-1px);
+	}
+
+	.home-section {
 		position: relative;
+		min-height: 100vh;
+		min-height: 100dvh;
 		overflow: hidden;
 	}
 
-	.hero-home .liquid-glass::before {
-		content: "";
+	.section-video,
+	.footer-video {
 		position: absolute;
 		inset: 0;
-		border-radius: inherit;
-		padding: 1.4px;
-		background: linear-gradient(
-			180deg,
-			rgba(255, 255, 255, 0.45) 0%,
-			rgba(255, 255, 255, 0.15) 20%,
-			rgba(255, 255, 255, 0) 40%,
-			rgba(255, 255, 255, 0) 60%,
-			rgba(255, 255, 255, 0.15) 80%,
-			rgba(255, 255, 255, 0.45) 100%
-		);
-		-webkit-mask:
-			linear-gradient(#fff 0 0) content-box,
-			linear-gradient(#fff 0 0);
-		-webkit-mask-composite: xor;
-		mask-composite: exclude;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.home-grain {
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		background-image: radial-gradient(rgba(255, 255, 255, 0.42) 1px, transparent 1px);
+		background-size: 24px 24px;
+		opacity: 0.06;
 		pointer-events: none;
 	}
 
-	@keyframes fade-rise {
-		from {
-			opacity: 0;
-			transform: translateY(24px);
+	.section-shade {
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		background:
+			linear-gradient(180deg, rgba(2, 9, 13, 0.85), rgba(2, 9, 13, 0.18) 35%, rgba(2, 9, 13, 0.9)),
+			rgba(0, 0, 0, 0.32);
+	}
+
+	.hero-watermark {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		z-index: 1;
+		transform: translate(-50%, -45%);
+		font-family: var(--font-display);
+		font-size: clamp(5rem, 18vw, 18rem);
+		line-height: 0.85;
+		letter-spacing: -0.07em;
+		color: rgba(255, 255, 255, 0.075);
+		white-space: nowrap;
+		pointer-events: none;
+	}
+
+	.hero-layout {
+		position: relative;
+		z-index: 2;
+		display: grid;
+		min-height: 100vh;
+		min-height: 100dvh;
+		grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+		align-items: end;
+		gap: clamp(2rem, 6vw, 6rem);
+		padding: 11rem clamp(1.5rem, 5vw, 5rem) 5rem;
+	}
+
+	.eyebrow {
+		margin-bottom: 1.6rem;
+		color: rgba(255, 255, 255, 0.42);
+		font-size: 0.76rem;
+		font-weight: 600;
+		letter-spacing: 0.22em;
+		text-transform: uppercase;
+	}
+
+	.hero-copy h1,
+	.system-layout h2,
+	.architecture-inner h2 {
+		margin: 0;
+		color: white;
+		font-weight: 400;
+		letter-spacing: -0.045em;
+	}
+
+	.hero-copy h1 {
+		max-width: 820px;
+		font-size: clamp(4.6rem, 12vw, 10rem);
+		line-height: 0.86;
+	}
+
+	.hero-copy h1 em {
+		display: block;
+		color: rgba(255, 255, 255, 0.56);
+		font-style: normal;
+	}
+
+	.hero-desc {
+		margin-top: 2rem;
+		max-width: 610px;
+		color: rgba(255, 255, 255, 0.66);
+		font-size: clamp(1rem, 1.4vw, 1.18rem);
+		line-height: 1.8;
+	}
+
+	.signal-stage {
+		justify-self: end;
+		width: min(360px, 100%);
+	}
+
+	.signal-orbit {
+		position: relative;
+		display: grid;
+		aspect-ratio: 1;
+		place-items: center;
+		border: 1px solid var(--line);
+		border-radius: 32px;
+		background:
+			linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent),
+			rgba(255, 255, 255, 0.045);
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+	}
+
+	.signal-orbit::before,
+	.signal-orbit::after {
+		position: absolute;
+		content: "";
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: inherit;
+	}
+
+	.signal-orbit::before {
+		inset: 16%;
+	}
+
+	.signal-orbit::after {
+		inset: 31%;
+		border-radius: 999px;
+	}
+
+	.signal-head {
+		position: relative;
+		z-index: 2;
+		display: grid;
+		width: 116px;
+		aspect-ratio: 1;
+		place-items: center;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 42% 58% 46% 54%;
+		background:
+			radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.32), transparent 42%),
+			rgba(255, 255, 255, 0.08);
+		transform: rotateX(var(--look-y, 0deg)) rotateY(var(--look-x, 0deg));
+		transition: transform 0.16s ease-out;
+		transform-style: preserve-3d;
+	}
+
+	.signal-head span {
+		width: 38px;
+		height: 10px;
+		border-radius: 999px;
+		background: rgba(255, 255, 255, 0.85);
+		transform: translateZ(22px) translate(var(--eye-x, 0), var(--eye-y, 0));
+		box-shadow: 0 0 24px rgba(255, 255, 255, 0.28);
+	}
+
+	.signal-head i {
+		position: absolute;
+		bottom: 28px;
+		width: 46px;
+		height: 1px;
+		background: rgba(255, 255, 255, 0.36);
+		transform: translateZ(18px);
+	}
+
+	.signal-caption {
+		display: flex;
+		justify-content: space-between;
+		margin-top: 1rem;
+		color: rgba(255, 255, 255, 0.56);
+		font-size: 0.86rem;
+	}
+
+	.signal-caption strong {
+		color: white;
+		font-weight: 500;
+	}
+
+	.text-section {
+		display: grid;
+		place-items: center;
+		padding: 7rem 1.5rem;
+	}
+
+	.cinematic-line {
+		position: relative;
+		z-index: 2;
+		max-width: 980px;
+		color: rgba(255, 255, 255, 0.88);
+		font-family: var(--font-display);
+		font-size: clamp(2.1rem, 5.4vw, 5.8rem);
+		line-height: 1.05;
+		letter-spacing: -0.045em;
+		text-align: center;
+	}
+
+	.section-inner {
+		position: relative;
+		z-index: 2;
+		width: min(1120px, calc(100% - 40px));
+		margin: 0 auto;
+		padding: 9rem 0;
+	}
+
+	.metrics-section {
+		display: grid;
+		align-items: center;
+	}
+
+	.metrics-grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 1rem;
+	}
+
+	.metric-card {
+		min-height: 220px;
+		border: 1px solid var(--line);
+		border-radius: 24px;
+		padding: 1.6rem;
+		background: rgba(255, 255, 255, 0.055);
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+	}
+
+	.metric-card strong {
+		display: block;
+		color: white;
+		font-family: var(--font-display);
+		font-size: clamp(4rem, 9vw, 7.4rem);
+		font-weight: 400;
+		line-height: 0.9;
+		letter-spacing: -0.06em;
+	}
+
+	.metric-card span {
+		display: block;
+		margin-top: 1.2rem;
+		color: rgba(255, 255, 255, 0.52);
+	}
+
+	.system-section {
+		display: grid;
+		align-items: end;
+	}
+
+	.system-layout {
+		display: grid;
+		grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+		align-items: end;
+		gap: 4rem;
+	}
+
+	.system-layout h2,
+	.architecture-inner h2 {
+		max-width: 620px;
+		font-size: clamp(3rem, 8vw, 7rem);
+		line-height: 0.92;
+	}
+
+	.system-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 1rem;
+	}
+
+	.system-card {
+		min-height: 170px;
+		border: 1px solid var(--line);
+		border-radius: 22px;
+		padding: 1.3rem;
+		background: rgba(0, 0, 0, 0.28);
+	}
+
+	.system-card h3 {
+		margin: 0 0 0.7rem;
+		color: white;
+		font-size: 1.05rem;
+		font-weight: 500;
+	}
+
+	.system-card p,
+	.architecture-desc,
+	.footer-copy p {
+		color: rgba(255, 255, 255, 0.52);
+		line-height: 1.75;
+	}
+
+	.architecture-section {
+		display: grid;
+		min-height: 100vh;
+		place-items: center;
+		background: #020202;
+		padding: 8rem 1.5rem;
+	}
+
+	.architecture-inner {
+		width: min(760px, 100%);
+		text-align: center;
+	}
+
+	.architecture-inner h2 {
+		margin-inline: auto;
+	}
+
+	.architecture-desc {
+		max-width: 620px;
+		margin: 2rem auto 0;
+		font-size: 1.05rem;
+	}
+
+	.layer-stack {
+		display: grid;
+		gap: 0.8rem;
+		margin: 4rem auto 0;
+		width: min(520px, 100%);
+	}
+
+	.layer-stack div {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: 16px;
+		padding: 1.1rem 1.25rem;
+	}
+
+	.layer-stack span {
+		color: rgba(255, 255, 255, 0.32);
+		font-size: 0.76rem;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+	}
+
+	.layer-stack strong {
+		color: white;
+		font-family: var(--font-display);
+		font-size: 1.45rem;
+		font-weight: 400;
+	}
+
+	.home-footer {
+		position: relative;
+		display: grid;
+		min-height: 430px;
+		grid-template-columns: 0.92fr 1.08fr;
+		overflow: hidden;
+		background: #020202;
+	}
+
+	.footer-video {
+		position: relative;
+		min-height: 430px;
+	}
+
+	.footer-copy {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		padding: clamp(2rem, 7vw, 6rem);
+	}
+
+	.footer-copy strong {
+		color: white;
+		font-family: var(--font-display);
+		font-size: 2.2rem;
+		font-weight: 400;
+	}
+
+	.footer-copy p {
+		max-width: 520px;
+		margin: 1.2rem 0 2rem;
+	}
+
+	.footer-copy a {
+		width: fit-content;
+		border: 1px solid rgba(255, 255, 255, 0.14);
+		border-radius: 999px;
+		padding: 0.9rem 1.25rem;
+		color: white;
+		text-decoration: none;
+	}
+
+	.reveal-item {
+		opacity: 0;
+		transform: translateY(26px);
+		transition: opacity 0.8s ease, transform 0.8s ease;
+	}
+
+	.is-visible .reveal-item {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	.is-visible .reveal-item:nth-child(2) {
+		transition-delay: 0.08s;
+	}
+
+	.is-visible .reveal-item:nth-child(3) {
+		transition-delay: 0.16s;
+	}
+
+	.is-visible .reveal-item:nth-child(4) {
+		transition-delay: 0.24s;
+	}
+
+	@media (max-width: 900px) {
+		.home-nav {
+			grid-template-columns: 1fr auto;
 		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
+
+		.home-nav-links {
+			display: none;
+		}
+
+		.hero-layout,
+		.system-layout,
+		.home-footer {
+			grid-template-columns: 1fr;
+		}
+
+		.hero-layout {
+			align-items: center;
+			padding-top: 9rem;
+		}
+
+		.signal-stage {
+			justify-self: start;
+			width: min(280px, 100%);
+		}
+
+		.metrics-grid,
+		.system-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.footer-video {
+			min-height: 300px;
 		}
 	}
 
-	.hero-home .animate-fade-rise {
-		animation: fade-rise 0.8s ease-out both;
-	}
+	@media (max-width: 560px) {
+		.home-nav {
+			top: 12px;
+			width: calc(100% - 20px);
+			gap: 10px;
+		}
 
-	.hero-home .animate-fade-rise-delay {
-		animation: fade-rise 0.8s ease-out 0.2s both;
-	}
+		.home-brand {
+			max-width: 58vw;
+			overflow: hidden;
+			padding: 10px 13px;
+			font-size: 1.05rem;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
 
-	.hero-home .animate-fade-rise-delay-2 {
-		animation: fade-rise 0.8s ease-out 0.4s both;
+		.home-pill {
+			padding: 10px 13px;
+			font-size: 0.82rem;
+		}
+
+		.hero-copy h1 {
+			font-size: clamp(3.9rem, 18vw, 6rem);
+		}
+
+		.cinematic-line {
+			text-align: left;
+		}
 	}
 </style>
+
+<script>
+	const revealObserver = new IntersectionObserver(
+		(entries) => {
+			entries.forEach((entry) => {
+				if (entry.isIntersecting) {
+					entry.target.classList.add("is-visible");
+				}
+			});
+		},
+		{ threshold: 0.24 },
+	);
+
+	document.querySelectorAll("[data-reveal-section]").forEach((section) => {
+		revealObserver.observe(section);
+	});
+
+	const signalHead = document.getElementById("signal-head");
+	window.addEventListener("pointermove", (event) => {
+		if (!signalHead) return;
+		const rect = signalHead.getBoundingClientRect();
+		const centerX = rect.left + rect.width / 2;
+		const centerY = rect.top + rect.height / 2;
+		const dx = Math.max(-1, Math.min(1, (event.clientX - centerX) / window.innerWidth));
+		const dy = Math.max(-1, Math.min(1, (event.clientY - centerY) / window.innerHeight));
+		signalHead.style.setProperty("--look-x", `${dx * 34}deg`);
+		signalHead.style.setProperty("--look-y", `${dy * -28}deg`);
+		signalHead.style.setProperty("--eye-x", `${dx * 16}px`);
+		signalHead.style.setProperty("--eye-y", `${dy * 12}px`);
+	});
+</script>
