@@ -164,6 +164,8 @@ const websiteJsonLd = {
 		<meta name="viewport" content="width=device-width" />
 		<meta name="theme-color" content={`hsl(${configHue}, 75%, 55%)`}>
 		<meta name="generator" content={Astro.generator} />
+		<link rel="preconnect" href="https://d8j0ntlcm91z4.cloudfront.net" crossorigin>
+		<link rel="dns-prefetch" href="https://d8j0ntlcm91z4.cloudfront.net">
 		<link rel="manifest" href={url("/site.webmanifest")}>
 		{favicons.map(favicon => (
 			<link rel="icon"
@@ -223,7 +225,9 @@ const websiteJsonLd = {
 		  data-overlayscrollbars-initialize
 	>
 		<ConfigCarrier></ConfigCarrier>
-		<slot />
+		<div id="swup-root" class="transition-swup-fade">
+			<slot />
+		</div>
 
 		<!-- increase the page height during page transition to prevent the scrolling animation from jumping -->
 		<div id="page-height-extend" class="hidden h-[300vh]"></div>
