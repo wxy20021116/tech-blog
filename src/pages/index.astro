@@ -60,6 +60,7 @@ const navLinks: NavBarLink[] = navBarConfig.links.map(
 						<a
 							href={link.external ? link.url : url(link.url)}
 							target={link.external ? "_blank" : null}
+							data-no-swup={!link.external ? true : undefined}
 							class:list={[
 								"text-sm transition-colors hover:text-[hsl(var(--foreground))]",
 								link.url === "/"
@@ -75,6 +76,7 @@ const navLinks: NavBarLink[] = navBarConfig.links.map(
 
 			<a
 				href={url("/articles/")}
+				data-no-swup
 				class="liquid-glass rounded-full px-5 py-2.5 text-sm text-[hsl(var(--foreground))] transition-transform hover:scale-[1.03] sm:px-6"
 			>
 				开始阅读
@@ -101,6 +103,7 @@ const navLinks: NavBarLink[] = navBarConfig.links.map(
 
 			<a
 				href={url("/articles/")}
+				data-no-swup
 				class="liquid-glass animate-fade-rise-delay-2 mt-12 cursor-pointer rounded-full px-14 py-5 text-base text-[hsl(var(--foreground))] transition-transform hover:scale-[1.03]"
 			>
 				进入文章
