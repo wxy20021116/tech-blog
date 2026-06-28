@@ -18,20 +18,6 @@ html.is-animating .transition-swup-fade {
     pointer-events: none;
 }
 
-html.is-changing #theme-color-panel,
-html.is-changing #light-dark-panel,
-html.is-changing #search-panel,
-html.is-changing #nav-menu-panel,
-html.is-changing .float-panel {
-    opacity: 0 !important;
-    transform: translate3d(0, -0.25rem, 0) !important;
-    pointer-events: none !important;
-}
-
-html.is-changing #navbar {
-    pointer-events: none;
-}
-
 /* Fade-in animations for components */
 @keyframes fade-in-up {
     0% {
