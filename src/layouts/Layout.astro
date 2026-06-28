@@ -5,7 +5,12 @@ import "@fontsource/roboto/700.css";
 import "../styles/mermaid.css";
 
 import ConfigCarrier from "@components/ConfigCarrier.astro";
-import { analyticsConfig, busuanziConfig, profileConfig, siteConfig } from "@/config";
+import {
+	analyticsConfig,
+	busuanziConfig,
+	profileConfig,
+	siteConfig,
+} from "@/config";
 import {
 	AUTO_MODE,
 	BANNER_HEIGHT,
@@ -90,7 +95,10 @@ const resolvedOgImage = new URL(
 	ogImage || url("/og/site.png"),
 	Astro.site || Astro.url.origin,
 ).toString();
-const canonicalUrl = new URL(Astro.url.pathname, Astro.site || Astro.url.origin);
+const canonicalUrl = new URL(
+	Astro.url.pathname,
+	Astro.site || Astro.url.origin,
+);
 const pageDescription = description || siteConfig.subtitle || pageTitle;
 const rawKeywords = keywords.length > 0 ? keywords : siteConfig.keywords;
 const keywordContent = rawKeywords
@@ -575,6 +583,14 @@ function syncNavbarVisibility() {
 	navbar?.classList.remove('navbar-hidden')
 }
 
+function closeFloatingPanels() {
+	document
+		.querySelectorAll('#theme-color-panel, #light-dark-panel, #search-panel, #nav-menu-panel')
+		.forEach((panel) => {
+			panel.classList.add('float-panel-closed')
+		})
+}
+
 /* Load settings when entering the site */
 init();
 
@@ -592,6 +608,7 @@ const setup = () => {
 	})
 */
 	window.swup.hooks.on('link:click', () => {
+		closeFloatingPanels()
 		// Remove the delay for the first time page load
 		document.documentElement.style.setProperty('--content-delay', '0ms')
 
@@ -599,6 +616,7 @@ const setup = () => {
 	})
 	window.swup.hooks.on('content:replace', initCustomScrollbar)
 	window.swup.hooks.on('visit:start', (visit: {to: {url: string}}) => {
+		closeFloatingPanels()
 		// change banner height immediately when a link is clicked
 		const bodyElement = document.querySelector('body')
 		if (pathsEqual(visit.to.url, url('/'))) {
